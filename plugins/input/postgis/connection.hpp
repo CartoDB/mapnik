@@ -167,6 +167,13 @@ public:
         return s.str();
     }
 
+    bool set_search_path(std::string search_path)
+    {
+        std::string sql = "SET search_path = ";
+        sql += search_path;
+        return this->execute(sql);
+    }
+
 private:
     PGconn *conn_;
     int cursorId;

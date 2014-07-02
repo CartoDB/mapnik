@@ -74,7 +74,9 @@ postgis_datasource::postgis_datasource(parameters const& params)
              params.get<std::string>("dbname"),
              params.get<std::string>("user"),
              params.get<std::string>("password"),
-             params.get<std::string>("connect_timeout", "4")),
+             params.get<std::string>("connect_timeout", "4"),
+             params.get<std::string>("search_path", "")
+             ),
     bbox_token_("!bbox!"),
     scale_denom_token_("!scale_denominator!"),
     pixel_width_token_("!pixel_width!"),
@@ -116,6 +118,10 @@ postgis_datasource::postgis_datasource(parameters const& params)
 
         if (conn->isOK())
         {
+            if (!creator_.search_path().empty()) 
+            {
+                conn->set_search_path(creator_.search_path());
+            }
 
             desc_.set_encoding(conn->client_encoding());
 
@@ -599,6 +605,11 @@ featureset_ptr postgis_datasource::features(const query& q) const
         shared_ptr<Connection> conn = pool->borrowObject();
         if (conn && conn->isOK())
         {
+            if (!creator_.search_path().empty()) 
+            {
+                conn->set_search_path(creator_.search_path());
+            }
+
             if (geometryColumn_.empty())
             {
                 std::ostringstream s_error;
@@ -715,6 +726,11 @@ featureset_ptr postgis_datasource::features_at_point(coord2d const& pt, double t
 
         if (conn->isOK())
         {
+            if (!creator_.search_path().empty()) 
+            {
+                conn->set_search_path(creator_.search_path());
+            }
+
             if (geometryColumn_.empty())
             {
                 std::ostringstream s_error;
@@ -799,6 +815,11 @@ box2d<double> postgis_datasource::envelope() const
         if (conn->isOK())
         {
             std::ostringstream s;
+
+            if (!creator_.search_path().empty()) 
+            {
+                conn->set_search_path(creator_.search_path());
+            }
 
             if (geometryColumn_.empty())
             {
@@ -891,6 +912,12 @@ boost::optional<mapnik::datasource::geometry_t> postgis_datasource::get_geometry
         {
             std::ostringstream s;
             std::string g_type;
+
+            if (!creator_.search_path().empty()) 
+            {
+                conn->set_search_path(creator_.search_path());
+            }
+
             try
             {
                 s << "SELECT lower(type) as type FROM "

@@ -52,13 +52,17 @@ public:
                       boost::optional<std::string> const& dbname,
                       boost::optional<std::string> const& user,
                       boost::optional<std::string> const& pass,
-                      boost::optional<std::string> const& connect_timeout)
+                      boost::optional<std::string> const& connect_timeout,
+                      boost::optional<std::string> const& search_path
+                      )
         : host_(host),
           port_(port),
           dbname_(dbname),
           user_(user),
           pass_(pass),
-          connect_timeout_(connect_timeout) {}
+          connect_timeout_(connect_timeout),
+          search_path_(search_path)
+          {}
 
     T* operator()() const
     {
@@ -67,7 +71,12 @@ public:
 
     inline std::string id() const
     {
-        return connection_string();
+        return connection_string() + search_path();
+    }
+
+    inline std::string search_path() const
+    {
+        return *search_path_;
     }
 
     inline std::string connection_string() const
@@ -96,6 +105,7 @@ private:
     boost::optional<std::string> user_;
     boost::optional<std::string> pass_;
     boost::optional<std::string> connect_timeout_;
+    boost::optional<std::string> search_path_;
 };
 
 class ConnectionManager : public singleton <ConnectionManager,CreateStatic>

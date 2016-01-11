@@ -141,6 +141,8 @@ public:
             s.precision(2);
             s << std::fixed;
             s << wall_clock_elapsed() << "ms (cpu " << cpu_elapsed() << "ms)";
+            base_message.erase(std::remove(base_message.begin(), base_message.end(), '\n'), base_message.end());
+            base_message.erase(std::remove(base_message.begin(), base_message.end(), '\r'), base_message.end());
             s << std::setw(30 - (int)s.tellp()) << std::right << "| " << base_message_ << "\n";
             os_ << s.str();
         }

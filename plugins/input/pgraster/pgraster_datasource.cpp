@@ -877,7 +877,7 @@ featureset_ptr pgraster_datasource::features_with_context(query const& q,process
         std::string table_with_bbox;
         std::string col = geometryColumn_;
 
-        if ( use_overviews_ ) {
+        if ( use_overviews_ && !overviews_.empty()) {
           std::string sch = overviews_[0].schema;
           std::string tab = overviews_[0].table;
           col = overviews_[0].column;

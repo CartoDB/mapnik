@@ -71,9 +71,7 @@ class timer_stats_
 public:
     void add(std::string metric_name, double cpu_elapsed, double wall_clock_elapsed)
     {
-        timer_metrics metrics;
-
-        metrics = timer_stats_[metric_name];
+        timer_metrics& metrics = timer_stats_[metric_name];
         metrics.cpu_elapsed += cpu_elapsed;
         metrics.wall_clock_elapsed += wall_clock_elapsed;
         timer_stats_[metric_name] = metrics;

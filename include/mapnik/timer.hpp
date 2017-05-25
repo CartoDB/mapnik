@@ -29,6 +29,7 @@
 #include <sstream>
 #include <iomanip>
 #include <ctime>
+#include <unordered_map>
 
 #ifdef _WINDOWS
 #define NOMINMAX
@@ -57,6 +58,15 @@ inline double time_now()
     return t.tv_sec + t.tv_usec * 1e-6;
 #endif
 }
+
+
+
+struct timer_metrics {
+    double cpu_elapsed;
+    double wall_clock_elapsed;
+};
+
+std::unordered_map<std::string, timer_metrics> timer_stats;
 
 
 // Measure times in both wall clock time and CPU times. Results are returned in milliseconds.
@@ -119,9 +129,8 @@ protected:
 class progress_timer : public timer
 {
 public:
-    progress_timer(std::ostream & os, std::string const& base_message)
-        : os_(os),
-          base_message_(base_message)
+    progress_timer(std::string const& metric_name)
+        : metric_name_(metric_name)
     {}
 
     ~progress_timer()
@@ -137,12 +146,7 @@ public:
         timer::stop();
         try
         {
-            std::ostringstream s;
-            s.precision(2);
-            s << std::fixed;
-            s << wall_clock_elapsed() << "ms (cpu " << cpu_elapsed() << "ms)";
-            s << std::setw(30 - (int)s.tellp()) << std::right << "| " << base_message_ << "\n";
-            os_ << s.str();
+            timer_stats.insert({metric_name_, {cpu_elapsed(), wall_clock_elapsed()}});
         }
         catch (...) {} // eat any exceptions
     }
@@ -153,8 +157,7 @@ public:
     }
 
 private:
-    std::ostream & os_;
-    std::string base_message_;
+    std::string metric_name_;
 };
 
 }

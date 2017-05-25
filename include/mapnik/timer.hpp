@@ -66,7 +66,25 @@ struct timer_metrics {
     double wall_clock_elapsed;
 };
 
-std::unordered_map<std::string, timer_metrics> timer_stats;
+class timer_stats_
+{
+public:
+    void add(std::string metric_name, double cpu_elapsed, double wall_clock_elapsed)
+    {
+        timer_metrics metrics;
+
+        metrics = timer_stats_[metric_name];
+        metrics.cpu_elapsed += cpu_elapsed;
+        metrics.wall_clock_elapsed += wall_clock_elapsed;
+        timer_stats_[metric_name] = metrics;
+    }
+
+private:
+    std::unordered_map<std::string, timer_metrics> timer_stats_;
+};
+
+timer_stats_ timer_stats;
+
 
 
 // Measure times in both wall clock time and CPU times. Results are returned in milliseconds.
@@ -146,7 +164,7 @@ public:
         timer::stop();
         try
         {
-            timer_stats.insert({metric_name_, {cpu_elapsed(), wall_clock_elapsed()}});
+            timer_stats.add(metric_name_, cpu_elapsed(), wall_clock_elapsed());
         }
         catch (...) {} // eat any exceptions
     }

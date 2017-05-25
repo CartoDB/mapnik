@@ -82,6 +82,10 @@ public:
         return timer_stats_[metric_name];
     }
 
+    void reset(std::string metric_name) {
+        timer_stats_.erase(metric_name);
+    }
+
 private:
     std::unordered_map<std::string, timer_metrics> timer_stats_;
 };

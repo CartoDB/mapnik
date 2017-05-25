@@ -30,6 +30,7 @@
 #include <iomanip>
 #include <ctime>
 #include <unordered_map>
+#include <iterator>
 
 #ifdef _WINDOWS
 #define NOMINMAX
@@ -66,6 +67,8 @@ struct timer_metrics {
     double wall_clock_elapsed;
 };
 
+typedef std::unordered_map<std::string, timer_metrics> metrics_hash_t;
+
 class timer_stats_
 {
 public:
@@ -90,9 +93,16 @@ public:
         timer_stats_.clear();
     }
 
+    metrics_hash_t::iterator begin() {
+        return timer_stats_.begin();
+    }
+
+    metrics_hash_t::iterator end() {
+        return timer_stats_.end();
+    }
 
 private:
-    std::unordered_map<std::string, timer_metrics> timer_stats_;
+    metrics_hash_t timer_stats_;
 };
 
 timer_stats_ timer_stats;

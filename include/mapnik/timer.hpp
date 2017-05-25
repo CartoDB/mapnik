@@ -86,6 +86,11 @@ public:
         timer_stats_.erase(metric_name);
     }
 
+    void reset_all() {
+        timer_stats_.clear();
+    }
+
+
 private:
     std::unordered_map<std::string, timer_metrics> timer_stats_;
 };

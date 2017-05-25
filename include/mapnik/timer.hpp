@@ -79,6 +79,11 @@ public:
         timer_stats_[metric_name] = metrics;
     }
 
+    timer_metrics get(std::string metric_name)
+    {
+        return timer_stats_[metric_name];
+    }
+
 private:
     std::unordered_map<std::string, timer_metrics> timer_stats_;
 };

@@ -5,7 +5,10 @@
 ## An overview of the dependencies
 This is a graph of the dependencies, just to give you an idea of what's behind the scenes:
 
-![node-mapnik dependencies](http://g.gravizo.com/g?
+![node-mapnik dependencies](g.gravizo.com/source/custom_mark10?https%3A%2F%2Fraw.githubusercontent.com%2FCartoDB%2Fmapnik%2Fcompiling-mapnik-windshaft-cartodb%2Fdocs%2Fcompiling-mapnik-windshaft.cartodb.md)
+<details> 
+<summary></summary>
+custom_mark10
 digraph G {
         "windshaft-cartodb" -> windshaft;
         windshaft -> "node-mapnik";
@@ -27,7 +30,8 @@ digraph G {
             mapnik -> "..."
         }
 }
-)
+custom_mark10
+</details>
 
 Notes:
 

@@ -4,6 +4,7 @@
 
 ## An overview of the dependencies
 This is a graph of the dependencies, just to give you an idea of what's behind the scenes:
+
 ![node-mapnik dependencies](http://g.gravizo.com/g?
 digraph G {
         "windshaft-cartodb" -> windshaft;

@@ -130,7 +130,7 @@ struct render_marker_symbolizer_visitor
 
         svg_path_ptr stock_vector_marker = mark.get_data();
         svg_path_ptr marker_ptr = stock_vector_marker;
-        bool is_ellipse = false;
+        bool create_ellipse = false;
 
         svg_attribute_type s_attributes;
         auto const& r_attributes = get_marker_attributes(stock_vector_marker, s_attributes);
@@ -140,8 +140,27 @@ struct render_marker_symbolizer_visitor
         if (filename_ == "shape://ellipse"
            && (has_key(sym_,keys::width) || has_key(sym_,keys::height)))
         {
-            marker_ptr = std::make_shared<svg_storage_type>();
-            is_ellipse = true;
+            // Ellipses are built procedurally. We do caching of the built ellipses, this is useful for rendering stages
+            std::tuple<double, double, double> key(
+                get<double>(sym_, keys::width, feature_, common_.vars_, -std::numeric_limits<double>::infinity()),
+                get<double>(sym_, keys::height, feature_, common_.vars_, -std::numeric_limits<double>::infinity()),
+                get<double>(sym_, keys::stroke_width, feature_, common_.vars_, -std::numeric_limits<double>::infinity())
+            );
+
+            auto it = cached_ellipses_.find(key);
+            if (it == cached_ellipses_.end())
+            {
+                marker_ptr = std::make_shared<svg_storage_type>();
+                create_ellipse = true;
+
+                if (cached_ellipses_.size() > cache_size)
+                {
+                    cached_ellipses_.erase(cached_ellipses_.begin());
+                }
+                it = cached_ellipses_.emplace(key, marker_ptr).first;
+            }
+
+            marker_ptr = it->second;
         }
         else
         {
@@ -152,7 +171,7 @@ struct render_marker_symbolizer_visitor
         vertex_stl_adapter<svg_path_storage> stl_storage(marker_ptr->source());
         svg_path_adapter svg_path(stl_storage);
 
-        if (is_ellipse)
+        if (create_ellipse)
         {
             build_ellipse(sym_, feature_, common_.vars_, *marker_ptr, svg_path);
         }
@@ -210,7 +229,14 @@ struct render_marker_symbolizer_visitor
     RendererType const& common_;
     box2d<double> const& clip_box_;
     ContextType & renderer_context_;
+
+    static std::map<std::tuple<double, double, double>, svg_path_ptr> cached_ellipses_;
+
+    static constexpr size_t cache_size = 128; // maximum number of images to cache
 };
+
+template <typename Detector, typename RendererType, typename ContextType>
+std::map<std::tuple<double, double, double>, svg_path_ptr> render_marker_symbolizer_visitor<Detector, RendererType, ContextType>::cached_ellipses_;
 
 } // namespace detail
 

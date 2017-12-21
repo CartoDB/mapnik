@@ -51,6 +51,8 @@ namespace mapnik {
 
 namespace detail {
 
+using svg_path_attrib_data = std::array<unsigned char, sizeof(svg::path_attributes)>;
+
 template <typename SvgRenderer, typename BufferType, typename RasterizerType>
 struct agg_markers_renderer_context : markers_renderer_context
 {
@@ -78,9 +80,68 @@ struct agg_markers_renderer_context : markers_renderer_context
                                markers_dispatch_params const& params,
                                agg::trans_affine const& marker_tr)
     {
+        // We try to reuse existing marker images. We currently do it only for single attribute set
+        if (attrs.size() == 1)
+        {
+            // Markers are generally drawn using 2 shapes. To be safe, check that at most one of the shapes has transparency.
+            // Also, check that transform does not use any scaling/shearing.
+            if (attrs[0].opacity == 1.0 && !(attrs[0].fill_opacity != 1.0 && attrs[0].stroke_opacity != 1.0) && marker_tr.sx == 1.0 && marker_tr.sy == 1.0 && marker_tr.shx == 0.0 && marker_tr.shy == 0.0)
+            {
+                // Now calculate subpixel offset and sample index
+                double dx = marker_tr.tx - std::floor(marker_tr.tx);
+                double dy = marker_tr.ty - std::floor(marker_tr.ty);
+
+                double sample_x = std::floor(dx * sampling_rate);
+                double sample_y = std::floor(dy * sampling_rate);
+                
+                int sample_idx = static_cast<int>(sample_y) * sampling_rate + static_cast<int>(sample_x);
+
+                std::tuple<svg_path_ptr, svg_path_attrib_data, int> key(src, *reinterpret_cast<svg_path_attrib_data const*>(&attrs[0]), sample_idx);
+
+                auto it = cached_images_.find(key);
+                if (it == cached_images_.end())
+                {
+                    int width = std::ceil(src->bounding_box().width()) + 2;
+                    int height = std::ceil(src->bounding_box().height()) + 2;
+
+                    image_rgba8 img(width, height, true);
+
+                    agg::rendering_buffer buf(img.bytes(), width, height, 4 * width);
+                    pixfmt_type pixf(buf);
+                    renderer_base renb(pixf);
+
+                    // Build local transformation matrix by resetting translation coordinates
+                    agg::trans_affine marker_tr_copy(marker_tr);
+                    marker_tr_copy.tx = sample_x / sampling_rate - std::floor(src->bounding_box().minx());
+                    marker_tr_copy.ty = sample_y / sampling_rate - std::floor(src->bounding_box().miny());
+
+                    SvgRenderer svg_renderer(path, attrs);
+                    render_vector_marker(svg_renderer, ras_, renb, src->bounding_box(), marker_tr_copy, 1.0f, false);
+
+                    if (cached_images_.size() > cache_size)
+                    {
+                        cached_images_.erase(cached_images_.begin());
+                    }
+                    it = cached_images_.emplace(key, img).first;
+                }
+
+                // Set up blitting transformation. We will add a small offset due to sampling
+                agg::trans_affine marker_tr_copy(marker_tr);
+                marker_tr_copy.tx = std::floor(marker_tr.tx) + (dx - sample_x / sampling_rate) + std::floor(src->bounding_box().minx());
+                marker_tr_copy.ty = std::floor(marker_tr.ty) + (dy - sample_y / sampling_rate) + std::floor(src->bounding_box().miny());
+                marker_tr_copy.sx = 1.0;
+                marker_tr_copy.sy = 1.0;
+                marker_tr_copy.shx = 0.0;
+                marker_tr_copy.shy = 0.0;
+
+                render_raster_marker(renb_, ras_, it->second, marker_tr_copy, params.opacity, params.scale_factor, params.snap_to_pixels);
+                return;
+            }
+        }
+
+        // Fallback to non-cached rendering path
         SvgRenderer svg_renderer(path, attrs);
-        render_vector_marker(svg_renderer, ras_, renb_, src->bounding_box(),
-                             marker_tr, params.opacity, params.snap_to_pixels);
+        render_vector_marker(svg_renderer, ras_, renb_, src->bounding_box(), marker_tr, params.opacity, params.snap_to_pixels);
     }
 
 
@@ -99,7 +160,15 @@ private:
     pixfmt_type pixf_;
     renderer_base renb_;
     RasterizerType & ras_;
+
+    static std::map<std::tuple<svg_path_ptr, svg_path_attrib_data, int>, image_rgba8> cached_images_;
+
+    static constexpr size_t cache_size = 128; // maximum number of images to cache
+    static constexpr int sampling_rate = 4; // this determines subpixel precision. The larger the value, the closer the solution will be compared to the reference but will reduce the cache hits
 };
+
+template <typename SvgRenderer, typename BufferType, typename RasterizerType>
+std::map<std::tuple<svg_path_ptr, svg_path_attrib_data, int>, image_rgba8> agg_markers_renderer_context<SvgRenderer, BufferType, RasterizerType>::cached_images_;
 
 } // namespace detail
 

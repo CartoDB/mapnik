@@ -130,10 +130,39 @@ struct render_marker_symbolizer_visitor
 
         svg_path_ptr stock_vector_marker = mark.get_data();
         svg_path_ptr marker_ptr = stock_vector_marker;
-        bool create_ellipse = false;
 
-        svg_attribute_type s_attributes;
-        auto const& r_attributes = get_marker_attributes(stock_vector_marker, s_attributes);
+        std::shared_ptr<svg_attribute_type> r_attributes;
+
+        // Look up the feature/symbolizer attributes from the cache.
+        // We are using raw symbolizer pointer as a cache key. This is a hack but
+        // works in practice due to symbolizers being created all at once during style loading.
+        markers_symbolizer const* attr_key = &sym_;
+
+        auto attr_it = cached_attributes_.find(attr_key);
+        if (attr_it == cached_attributes_.end())
+        {
+            svg_attribute_type s_attributes;
+            r_attributes = std::make_shared<svg_attribute_type>(get_marker_attributes(stock_vector_marker, s_attributes));
+
+            // We can only cache the attributes using the given key if no expressions are used in properties.
+            // Otherwise the expressions may refer to feature-specific values.
+            bool cacheable = std::all_of(
+                sym_.properties.begin(), sym_.properties.end(),
+                [](symbolizer_base::cont_type::value_type const& key_prop) { return !is_expression(key_prop.second); }
+            );
+            if (cacheable)
+            {
+                if (cached_attributes_.size() > cache_size)
+                {
+                    cached_attributes_.erase(cached_attributes_.begin());
+                }
+                attr_it = cached_attributes_.emplace(attr_key, r_attributes).first;
+            }
+        }
+        else
+        {
+            r_attributes = attr_it->second;
+        }
 
         // special case for simple ellipse markers
         // to allow for full control over rx/ry dimensions
@@ -141,26 +170,29 @@ struct render_marker_symbolizer_visitor
            && (has_key(sym_,keys::width) || has_key(sym_,keys::height)))
         {
             // Ellipses are built procedurally. We do caching of the built ellipses, this is useful for rendering stages
-            std::tuple<double, double, double> key(
+            std::tuple<double, double, double> marker_key(
                 get<double>(sym_, keys::width, feature_, common_.vars_, -std::numeric_limits<double>::infinity()),
                 get<double>(sym_, keys::height, feature_, common_.vars_, -std::numeric_limits<double>::infinity()),
                 get<double>(sym_, keys::stroke_width, feature_, common_.vars_, -std::numeric_limits<double>::infinity())
             );
 
-            auto it = cached_ellipses_.find(key);
-            if (it == cached_ellipses_.end())
+            auto marker_it = cached_ellipses_.find(marker_key);
+            if (marker_it == cached_ellipses_.end())
             {
                 marker_ptr = std::make_shared<svg_storage_type>();
-                create_ellipse = true;
+
+                vertex_stl_adapter<svg_path_storage> stl_storage(marker_ptr->source());
+                svg_path_adapter svg_path(stl_storage);
+                build_ellipse(sym_, feature_, common_.vars_, *marker_ptr, svg_path);
 
                 if (cached_ellipses_.size() > cache_size)
                 {
                     cached_ellipses_.erase(cached_ellipses_.begin());
                 }
-                it = cached_ellipses_.emplace(key, marker_ptr).first;
+                marker_it = cached_ellipses_.emplace(marker_key, marker_ptr).first;
             }
 
-            marker_ptr = it->second;
+            marker_ptr = marker_it->second;
         }
         else
         {
@@ -171,11 +203,6 @@ struct render_marker_symbolizer_visitor
         vertex_stl_adapter<svg_path_storage> stl_storage(marker_ptr->source());
         svg_path_adapter svg_path(stl_storage);
 
-        if (create_ellipse)
-        {
-            build_ellipse(sym_, feature_, common_.vars_, *marker_ptr, svg_path);
-        }
-
         if (auto image_transform = get_optional<transform_type>(sym_, keys::image_transform))
         {
             evaluate_transform(image_tr, feature_, common_.vars_, *image_transform, common_.scale_factor_);
@@ -183,7 +210,7 @@ struct render_marker_symbolizer_visitor
 
         vector_dispatch_type rasterizer_dispatch(marker_ptr,
                                                  svg_path,
-                                                 r_attributes,
+                                                 *r_attributes,
                                                  image_tr,
                                                  sym_,
                                                  *common_.detector_,
@@ -230,10 +257,14 @@ struct render_marker_symbolizer_visitor
     box2d<double> const& clip_box_;
     ContextType & renderer_context_;
 
+    static std::map<markers_symbolizer const*, std::shared_ptr<svg_attribute_type>> cached_attributes_;
     static std::map<std::tuple<double, double, double>, svg_path_ptr> cached_ellipses_;
 
-    static constexpr size_t cache_size = 128; // maximum number of images to cache
+    static constexpr size_t cache_size = 128; // maximum number of images/attributes to cache
 };
+
+template <typename Detector, typename RendererType, typename ContextType>
+std::map<markers_symbolizer const*, std::shared_ptr<svg_attribute_type>> render_marker_symbolizer_visitor<Detector, RendererType, ContextType>::cached_attributes_;
 
 template <typename Detector, typename RendererType, typename ContextType>
 std::map<std::tuple<double, double, double>, svg_path_ptr> render_marker_symbolizer_visitor<Detector, RendererType, ContextType>::cached_ellipses_;

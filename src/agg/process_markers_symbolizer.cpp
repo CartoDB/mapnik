@@ -89,13 +89,22 @@ struct agg_markers_renderer_context : markers_renderer_context
             bool cacheable = marker_tr.sx == 1.0 && marker_tr.sy == 1.0 && marker_tr.shx == 0.0 && marker_tr.shy == 0.0;
             if (cacheable)
             {
+                // Calculate canvas offsets
+                double margin = 0.0;
+                if (attrs[0].stroke_flag || attrs[0].stroke_gradient.get_gradient_type() != NO_GRADIENT)
+                {
+                    margin = std::abs(attrs[0].stroke_width);
+                }
+                double x0 = std::floor(src->bounding_box().minx() - margin);
+                double y0 = std::floor(src->bounding_box().miny() - margin);
+
                 // Now calculate subpixel offset and sample index
                 double dx = marker_tr.tx - std::floor(marker_tr.tx);
                 double dy = marker_tr.ty - std::floor(marker_tr.ty);
 
                 double sample_x = std::floor(dx * sampling_rate);
                 double sample_y = std::floor(dy * sampling_rate);
-                
+
                 int sample_idx = static_cast<int>(sample_y) * sampling_rate + static_cast<int>(sample_x);
 
                 std::tuple<svg_path_ptr, svg_path_attrib_data, int> key(src, *reinterpret_cast<svg_path_attrib_data const*>(&attrs[0]), sample_idx);
@@ -103,13 +112,14 @@ struct agg_markers_renderer_context : markers_renderer_context
                 auto it = cached_images_.find(key);
                 if (it == cached_images_.end())
                 {
-                    int width = std::ceil(src->bounding_box().width()) + 2;
-                    int height = std::ceil(src->bounding_box().height()) + 2;
+                    // Calculate canvas size
+                    int width  = static_cast<int>(std::ceil(src->bounding_box().width()  + 2.0 * margin)) + 2;
+                    int height = static_cast<int>(std::ceil(src->bounding_box().height() + 2.0 * margin)) + 2;
 
                     // Build local transformation matrix by resetting translation coordinates
                     agg::trans_affine marker_tr_copy(marker_tr);
-                    marker_tr_copy.tx = sample_x / sampling_rate - std::floor(src->bounding_box().minx());
-                    marker_tr_copy.ty = sample_y / sampling_rate - std::floor(src->bounding_box().miny());
+                    marker_tr_copy.tx = sample_x / sampling_rate - x0;
+                    marker_tr_copy.ty = sample_y / sampling_rate - y0;
 
                     // Create fill image
                     std::shared_ptr<image_rgba8> fill_img;
@@ -166,8 +176,8 @@ struct agg_markers_renderer_context : markers_renderer_context
 
                 // Set up blitting transformation. We will add a small offset due to sampling
                 agg::trans_affine marker_tr_copy(marker_tr);
-                marker_tr_copy.tx = std::floor(marker_tr.tx) + (dx - sample_x / sampling_rate) + std::floor(src->bounding_box().minx());
-                marker_tr_copy.ty = std::floor(marker_tr.ty) + (dy - sample_y / sampling_rate) + std::floor(src->bounding_box().miny());
+                marker_tr_copy.tx = std::floor(marker_tr.tx) + (dx - sample_x / sampling_rate) + x0;
+                marker_tr_copy.ty = std::floor(marker_tr.ty) + (dy - sample_y / sampling_rate) + y0;
                 marker_tr_copy.sx = 1.0;
                 marker_tr_copy.sy = 1.0;
                 marker_tr_copy.shx = 0.0;

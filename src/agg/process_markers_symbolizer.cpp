@@ -116,6 +116,9 @@ struct agg_markers_renderer_context : markers_renderer_context
                     int width  = static_cast<int>(std::ceil(src->bounding_box().width()  + 2.0 * margin)) + 2;
                     int height = static_cast<int>(std::ceil(src->bounding_box().height() + 2.0 * margin)) + 2;
 
+                    // Reset clip box
+                    ras_.clip_box(0, 0, width, height);
+
                     // Build local transformation matrix by resetting translation coordinates
                     agg::trans_affine marker_tr_copy(marker_tr);
                     marker_tr_copy.tx = sample_x / sampling_rate - x0;
@@ -137,7 +140,7 @@ struct agg_markers_renderer_context : markers_renderer_context
 
                         SvgRenderer svg_renderer(path, attrs_copy);
                         render_vector_marker(svg_renderer, ras_, renb, src->bounding_box(), marker_tr_copy, 1.0f, false);
-                        
+
                         if (std::all_of(fill_img->begin(), fill_img->end(), [](uint32_t val) { return val == 0; }))
                         {
                             fill_img.reset();
@@ -172,6 +175,9 @@ struct agg_markers_renderer_context : markers_renderer_context
                         cached_images_.erase(cached_images_.begin());
                     }
                     it = cached_images_.emplace(key, std::make_pair(fill_img, stroke_img)).first;
+
+                    // Restore clip box
+                    ras_.clip_box(0, 0, pixf_.width(), pixf_.height());
                 }
 
                 // Set up blitting transformation. We will add a small offset due to sampling

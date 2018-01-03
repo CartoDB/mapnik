@@ -29,6 +29,8 @@
 #include <sstream>
 #include <iomanip>
 #include <ctime>
+#include <unordered_map>
+#include <iterator>
 
 #ifdef _WINDOWS
 #define NOMINMAX
@@ -57,6 +59,54 @@ inline double time_now()
     return t.tv_sec + t.tv_usec * 1e-6;
 #endif
 }
+
+
+
+struct timer_metrics {
+    double cpu_elapsed;
+    double wall_clock_elapsed;
+};
+
+typedef std::unordered_map<std::string, timer_metrics> metrics_hash_t;
+
+class timer_stats_
+{
+public:
+    void add(std::string const& metric_name, double cpu_elapsed, double wall_clock_elapsed)
+    {
+        timer_metrics& metrics = timer_stats_[metric_name];
+        metrics.cpu_elapsed += cpu_elapsed;
+        metrics.wall_clock_elapsed += wall_clock_elapsed;
+        timer_stats_[metric_name] = metrics;
+    }
+
+    timer_metrics get(std::string const& metric_name)
+    {
+        return timer_stats_[metric_name];
+    }
+
+    void reset(std::string metric_name) {
+        timer_stats_.erase(metric_name);
+    }
+
+    void reset_all() {
+        timer_stats_.clear();
+    }
+
+    metrics_hash_t::iterator begin() {
+        return timer_stats_.begin();
+    }
+
+    metrics_hash_t::iterator end() {
+        return timer_stats_.end();
+    }
+
+private:
+    metrics_hash_t timer_stats_;
+};
+
+timer_stats_ timer_stats;
+
 
 
 // Measure times in both wall clock time and CPU times. Results are returned in milliseconds.
@@ -119,9 +169,8 @@ protected:
 class progress_timer : public timer
 {
 public:
-    progress_timer(std::ostream & os, std::string const& base_message)
-        : os_(os),
-          base_message_(base_message)
+    progress_timer(std::string const& metric_name)
+        : metric_name_(metric_name)
     {}
 
     ~progress_timer()
@@ -137,12 +186,7 @@ public:
         timer::stop();
         try
         {
-            std::ostringstream s;
-            s.precision(2);
-            s << std::fixed;
-            s << wall_clock_elapsed() << "ms (cpu " << cpu_elapsed() << "ms)";
-            s << std::setw(30 - (int)s.tellp()) << std::right << "| " << base_message_ << "\n";
-            os_ << s.str();
+            timer_stats.add(metric_name_, cpu_elapsed(), wall_clock_elapsed());
         }
         catch (...) {} // eat any exceptions
     }
@@ -153,8 +197,7 @@ public:
     }
 
 private:
-    std::ostream & os_;
-    std::string base_message_;
+    std::string metric_name_;
 };
 
 }

@@ -156,6 +156,57 @@ void load_map(Map & map, std::string const& filename, bool strict, std::string b
     read_xml(filename, tree.root());
     map_parser parser(map, strict, filename);
     parser.parse_map(map, tree.root(), base_path);
+
+    // Due manual rule optimization for marker symbolizers. If all styles
+    // use only marker symbolizers and all rules of the styles have explictly
+    // define allow_overlap=true, then set ignore_placement=true. This has
+    // both performance benefits and allows the rendering to run in constant space
+    // as the collision quadtree is not used.
+    // Note that the code can be generalized to include texts and points.
+    bool ignore_placement = true;
+    for (auto style_it = map.begin_styles(); style_it != map.end_styles(); style_it++)
+    {
+        for (auto & rule : style_it->second.get_rules_nonconst())
+        {
+            for (auto sym_it = rule.begin(); sym_it != rule.end(); sym_it++)
+            {
+                if (sym_it->is<markers_symbolizer>())
+                {
+                    markers_symbolizer & marker = sym_it->get<markers_symbolizer>();
+                    auto prop_it = marker.properties.find(keys::allow_overlap);
+                    if (prop_it != marker.properties.end())
+                    {
+                        if (prop_it->second == true)
+                        {
+                            continue;
+                        }
+                    }
+                }
+
+                // In all other cases (non-marker symbolizer, allow_overlap not explictly true) do not set ignore_placement
+                ignore_placement = false;
+                break;
+            }
+        }
+    }
+    if (ignore_placement)
+    {
+        for (auto style_it = map.begin_styles(); style_it != map.end_styles(); style_it++)
+        {
+            for (auto & rule : style_it->second.get_rules_nonconst())
+            {
+                for (auto sym_it = rule.begin(); sym_it != rule.end(); sym_it++)
+                {
+                    if (sym_it->is<markers_symbolizer>())
+                    {
+                        markers_symbolizer & marker = sym_it->get<markers_symbolizer>();
+                        marker.properties[keys::ignore_placement] = true;
+                    }
+                }
+            }
+        }
+        MAPNIK_LOG_DEBUG(load_map) << "setting ignore_placement=true due to all rules having allow_overlap=true";
+    }
 }
 
 void load_map_string(Map & map, std::string const& str, bool strict, std::string base_path)

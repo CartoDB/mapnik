@@ -8,6 +8,7 @@ Changes (planned):
  - Add this very changelog
  - Add metrics support. See [#3767](https://github.com/mapnik/mapnik/pull/3767)
  - Fix for boost namespace build error. See [#3733](https://github.com/mapnik/mapnik/issues/3733)
+ - Add support for U_ICU_VERSION_MAJOR_NUM >= 59 [#3729](https://github.com/mapnik/mapnik/issues/3729)
 
 
 ## 3.0.15.0

@@ -25,7 +25,6 @@
 #include <mapnik/svg/svg_path_adapter.hpp>
 #include <mapnik/marker_cache.hpp>
 #include <mapnik/marker_helpers.hpp>
-#include <mapnik/geometry/geometry_type.hpp>
 #include <mapnik/renderer_common/render_markers_symbolizer.hpp>
 #include <mapnik/symbolizer.hpp>
 

@@ -2,12 +2,13 @@
 
 ## 3.0.15.1
 
-**Release date**: TBD
+**Release date**: 2018-01-03
 
-Changes (planned):
+Changes:
  - Add this very changelog
  - Add metrics support. See [#3767](https://github.com/mapnik/mapnik/pull/3767)
  - Add support for U_ICU_VERSION_MAJOR_NUM >= 59 [#3729](https://github.com/mapnik/mapnik/issues/3729)
+ - Fix travis CI [#24](https://github.com/CartoDB/mapnik/pull/24)
 
 
 ## 3.0.15.0

@@ -81,12 +81,15 @@ struct agg_markers_renderer_context : markers_renderer_context
                                markers_dispatch_params const& params,
                                agg::trans_affine const& marker_tr)
     {
-        // We try to reuse existing marker images. We currently do it only for single attribute set.
+        // We try to reuse existing marker images.
+        // We currently do it only for single attribute set.
         if (attrs.size() == 1)
         {
-            // Markers are generally drawn using 2 shapes. To be safe, check that at most one of the shapes has transparency.
+            // Markers are generally drawn using 2 shapes. To be safe, check
+            // that at most one of the shapes has transparency.
             // Also, check that transform does not use any scaling/shearing.
-            bool cacheable = marker_tr.sx == 1.0 && marker_tr.sy == 1.0 && marker_tr.shx == 0.0 && marker_tr.shy == 0.0;
+            bool cacheable = marker_tr.sx == 1.0 && marker_tr.sy == 1.0 &&
+                             marker_tr.shx == 0.0 && marker_tr.shy == 0.0;
             if (cacheable)
             {
                 // Calculate canvas offsets
@@ -143,7 +146,7 @@ struct agg_markers_renderer_context : markers_renderer_context
 
                         if (std::all_of(fill_img->begin(), fill_img->end(), [](uint32_t val) { return val == 0; }))
                         {
-                            fill_img.reset();
+                            fill_img.reset(); // optimization, can ignore image
                         }
                     }
 
@@ -166,7 +169,7 @@ struct agg_markers_renderer_context : markers_renderer_context
 
                         if (std::all_of(stroke_img->begin(), stroke_img->end(), [](uint32_t val) { return val == 0; }))
                         {
-                            stroke_img.reset();
+                            stroke_img.reset(); // optimization, can ignore image
                         }
                     }
 
@@ -212,8 +215,9 @@ struct agg_markers_renderer_context : markers_renderer_context
                                markers_dispatch_params const& params,
                                agg::trans_affine const& marker_tr)
     {
-        // In the long term this should be a visitor pattern based on the type of
-        // render src provided that converts the destination pixel type required.
+        // In the long term this should be a visitor pattern based on the
+        // type of render src provided that converts the destination pixel
+        // type required.
         render_raster_marker(renb_, ras_, src, marker_tr, params.opacity,
                              params.scale_factor, params.snap_to_pixels);
     }
@@ -225,14 +229,20 @@ private:
     RasterizerType & ras_;
     composite_mode_e comp_op_;
 
-    static std::map<std::tuple<svg_path_ptr, svg_path_attrib_data, int>, std::pair<std::shared_ptr<image_rgba8>, std::shared_ptr<image_rgba8>>> cached_images_;
+    static std::map<
+               std::tuple<svg_path_ptr, svg_path_attrib_data, int>,
+               std::pair<std::shared_ptr<image_rgba8>, std::shared_ptr<image_rgba8>>
+           > cached_images_;
 
     static constexpr size_t cache_size = 128; // maximum number of images to cache
     static constexpr int sampling_rate = 4; // this determines subpixel precision. The larger the value, the closer the solution will be compared to the reference but will reduce the cache hits
 };
 
 template <typename SvgRenderer, typename BufferType, typename RasterizerType>
-std::map<std::tuple<svg_path_ptr, svg_path_attrib_data, int>, std::pair<std::shared_ptr<image_rgba8>, std::shared_ptr<image_rgba8>>> agg_markers_renderer_context<SvgRenderer, BufferType, RasterizerType>::cached_images_;
+std::map<
+    std::tuple<svg_path_ptr, svg_path_attrib_data, int>,
+    std::pair<std::shared_ptr<image_rgba8>, std::shared_ptr<image_rgba8>>
+> agg_markers_renderer_context<SvgRenderer, BufferType, RasterizerType>::cached_images_;
 
 } // namespace detail
 

@@ -151,11 +151,11 @@ struct render_marker_symbolizer_visitor
             );
             if (cacheable)
             {
-                if (cached_attributes_.size() > cache_size)
+                if (cached_attributes_.size() > attributes_cache_size)
                 {
                     cached_attributes_.erase(cached_attributes_.begin());
                 }
-                attr_it = cached_attributes_.emplace(attr_key, r_attributes).first;
+                cached_attributes_.emplace(attr_key, r_attributes).first;
             }
         }
         else
@@ -184,7 +184,7 @@ struct render_marker_symbolizer_visitor
                 svg_path_adapter svg_path(stl_storage);
                 build_ellipse(sym_, feature_, common_.vars_, *marker_ptr, svg_path);
 
-                if (cached_ellipses_.size() > cache_size)
+                if (cached_ellipses_.size() > ellipses_cache_size)
                 {
                     cached_ellipses_.erase(cached_ellipses_.begin());
                 }
@@ -256,17 +256,30 @@ struct render_marker_symbolizer_visitor
     box2d<double> const& clip_box_;
     ContextType & renderer_context_;
 
-    static std::map<markers_symbolizer const*, std::shared_ptr<svg_attribute_type>> cached_attributes_;
-    static std::map<std::tuple<double, double, double>, svg_path_ptr> cached_ellipses_;
+    static std::map<
+               markers_symbolizer const*,
+               std::shared_ptr<svg_attribute_type>
+           > cached_attributes_;
+    static std::map<
+               std::tuple<double, double, double>,
+               svg_path_ptr
+           > cached_ellipses_;
 
-    static constexpr size_t cache_size = 128; // maximum number of images/attributes to cache
+    static constexpr size_t attributes_cache_size = 128; // maximum number attributes to cache
+    static constexpr size_t ellipses_cache_size = 128; // maximum number ellipses to cache
 };
 
 template <typename Detector, typename RendererType, typename ContextType>
-std::map<markers_symbolizer const*, std::shared_ptr<svg_attribute_type>> render_marker_symbolizer_visitor<Detector, RendererType, ContextType>::cached_attributes_;
+std::map<
+    markers_symbolizer const*,
+    std::shared_ptr<svg_attribute_type>
+> render_marker_symbolizer_visitor<Detector, RendererType, ContextType>::cached_attributes_;
 
 template <typename Detector, typename RendererType, typename ContextType>
-std::map<std::tuple<double, double, double>, svg_path_ptr> render_marker_symbolizer_visitor<Detector, RendererType, ContextType>::cached_ellipses_;
+std::map<
+    std::tuple<double, double, double>,
+    svg_path_ptr
+> render_marker_symbolizer_visitor<Detector, RendererType, ContextType>::cached_ellipses_;
 
 } // namespace detail
 

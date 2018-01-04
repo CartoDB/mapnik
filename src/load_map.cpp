@@ -168,11 +168,11 @@ void load_map(Map & map, std::string const& filename, bool strict, std::string b
     {
         for (auto & rule : style_it->second.get_rules_nonconst())
         {
-            for (auto sym_it = rule.begin(); sym_it != rule.end(); sym_it++)
+            for (auto & sym : rule)
             {
-                if (sym_it->is<markers_symbolizer>())
+                if (sym.is<markers_symbolizer>())
                 {
-                    markers_symbolizer & marker = sym_it->get<markers_symbolizer>();
+                    markers_symbolizer & marker = sym.get<markers_symbolizer>();
                     auto prop_it = marker.properties.find(keys::allow_overlap);
                     if (prop_it != marker.properties.end())
                     {
@@ -195,11 +195,11 @@ void load_map(Map & map, std::string const& filename, bool strict, std::string b
         {
             for (auto & rule : style_it->second.get_rules_nonconst())
             {
-                for (auto sym_it = rule.begin(); sym_it != rule.end(); sym_it++)
+                for (auto & sym : rule)
                 {
-                    if (sym_it->is<markers_symbolizer>())
+                    if (sym.is<markers_symbolizer>())
                     {
-                        markers_symbolizer & marker = sym_it->get<markers_symbolizer>();
+                        markers_symbolizer & marker = sym.get<markers_symbolizer>();
                         marker.properties[keys::ignore_placement] = true;
                     }
                 }

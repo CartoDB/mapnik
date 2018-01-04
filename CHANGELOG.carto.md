@@ -2,10 +2,11 @@
 
 ## 3.0.15.2
 
-**Release date**: TBD
+**Release date**: 2018-01-04
 
 Changes:
  - Enable metrics by default [2036217](https://github.com/CartoDB/mapnik/commit/20362178de4aab1d758ea19137037fcbb470ef83).
+
 
 ## 3.0.15.1
 

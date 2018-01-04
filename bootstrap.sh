@@ -11,11 +11,11 @@ todo
 - shrink icu data
 '
 
-MASON_VERSION="v0.11.1"
+MASON_VERSION="master"
 
 function setup_mason() {
     if [[ ! -d ./.mason ]]; then
-        git clone https://github.com/mapbox/mason.git ./.mason
+        git clone https://github.com/CartoDB/mason.git ./.mason
         (cd ./.mason && git checkout ${MASON_VERSION})
     else
         echo "Updating to latest mason"

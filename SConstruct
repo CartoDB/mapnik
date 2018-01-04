@@ -385,7 +385,7 @@ opts.AddVariables(
     # Variables for logging and statistics
     BoolVariable('ENABLE_LOG', 'Enable logging, which is enabled by default when building in *debug*', 'False'),
     BoolVariable('ENABLE_STATS', 'Enable global statistics during map processing', 'False'),
-    BoolVariable('ENABLE_METRICS', 'Enable internal metrics during map processing', 'False'),
+    BoolVariable('ENABLE_METRICS', 'Enable internal metrics during map processing', 'True'),
     ('DEFAULT_LOG_SEVERITY', 'The default severity of the logger (eg. ' + ', '.join(severities) + ')', 'error'),
 
     # Plugin linking

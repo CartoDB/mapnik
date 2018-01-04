@@ -1,14 +1,22 @@
 # CARTO Mapnik Changelog
 
+## 3.0.15.2
+
+**Release date**: 2018-01-04
+
+Changes:
+ - Enable metrics by default [2036217](https://github.com/CartoDB/mapnik/commit/20362178de4aab1d758ea19137037fcbb470ef83).
+
+
 ## 3.0.15.1
 
-**Release date**: TBD
+**Release date**: 2018-01-03
 
-Changes (planned):
+Changes:
  - Add this very changelog
  - Add metrics support. See [#3767](https://github.com/mapnik/mapnik/pull/3767)
- - Fix for boost namespace build error. See [#3733](https://github.com/mapnik/mapnik/issues/3733)
  - Add support for U_ICU_VERSION_MAJOR_NUM >= 59 [#3729](https://github.com/mapnik/mapnik/issues/3729)
+ - Fix travis CI [#24](https://github.com/CartoDB/mapnik/pull/24)
 
 
 ## 3.0.15.0

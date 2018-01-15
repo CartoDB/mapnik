@@ -62,7 +62,7 @@ before_install:
  - source scripts/travis-common.sh
  - export PATH=${PREFIX}/bin:$(pwd)/mason_packages/.link/bin:${PATH}
  - export COVERAGE=${COVERAGE:-false}
- - export BENCH=${BENCH:-false}
+ - export BENCH=${BENCH:-true}
  - git_submodule_update --init
 
 install:

@@ -1,5 +1,13 @@
 # CARTO Mapnik Changelog
 
+## 3.0.15.3
+
+**Release date**: 2018-mm-dd
+
+Changes:
+ - Switch back to harfbuzz 1.3.0
+
+
 ## 3.0.15.2
 
 **Release date**: 2018-01-04

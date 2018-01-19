@@ -2,7 +2,7 @@
 
 ## 3.0.15.3
 
-**Release date**: 2018-mm-dd
+**Release date**: 2018-01-19
 
 Changes:
  - Switch back to harfbuzz 1.3.0

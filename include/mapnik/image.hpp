@@ -81,11 +81,9 @@ private:
     double scaling_;
     bool premultiplied_alpha_;
     bool painted_;
-#ifdef MAPNIK_METRICS
-public:
+public:METRIC_UNUSED
     metrics metrics_ = metrics(false);
-#endif
-public:
+
     image();
     image(int width,
           int height,

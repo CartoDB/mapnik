@@ -6,6 +6,7 @@
 
 Changes:
  - Use metrics without guards
+ - Add docs/metrics.md
 
 ## 3.0.15.3
 

@@ -89,7 +89,6 @@ feature_style_processor<Processor>::feature_style_processor(Map const& m,
     }
 }
 
-#ifdef MAPNIK_METRICS
 template <typename Processor>
 feature_style_processor<Processor>::feature_style_processor(Map const& m,
                                                             double scale_factor,
@@ -101,14 +100,11 @@ feature_style_processor<Processor>::feature_style_processor(Map const& m,
         throw std::runtime_error("scale_factor must be greater than 0.0");
     }
 }
-#endif
 
 template <typename Processor>
 void feature_style_processor<Processor>::apply(double scale_denom)
 {
-#ifdef MAPNIK_METRICS
-    auto t = metrics_.measure_time("Mapnik");
-#endif
+    METRIC_UNUSED auto t = metrics_.measure_time("Mapnik");
     Processor & p = static_cast<Processor&>(*this);
     p.start_map_processing(m_);
 
@@ -171,9 +167,7 @@ void feature_style_processor<Processor>::apply(mapnik::layer const& lyr,
                                                std::set<std::string>& names,
                                                double scale_denom)
 {
-#ifdef MAPNIK_METRICS
-    auto t = metrics_.measure_time("Mapnik");
-#endif
+    METRIC_UNUSED auto t = metrics_.measure_time("Mapnik");
     Processor & p = static_cast<Processor&>(*this);
     p.start_map_processing(m_);
     projection proj(m_.srs(),true);
@@ -244,9 +238,7 @@ void feature_style_processor<Processor>::prepare_layer(layer_rendering_material 
                                                        int buffer_size,
                                                        std::set<std::string>& names)
 {
-#ifdef MAPNIK_METRICS
-    auto t = metrics_.measure_time("Mapnik.Setup");
-#endif
+    METRIC_UNUSED auto t = metrics_.measure_time("Mapnik.Setup");
     layer const& lay = mat.lay_;
 
     std::vector<std::string> const& style_names = lay.styles();
@@ -456,24 +448,19 @@ void feature_style_processor<Processor>::prepare_layer(layer_rendering_material 
     bool cache_features = lay.cache_features() && active_styles.size() > 1;
 
     std::vector<featureset_ptr> & featureset_ptr_list = mat.featureset_ptr_list_;
-#ifdef MAPNIK_METRICS
-    {
-    auto t2 = metrics_.measure_time("Mapnik.Setup.Datasource: Get Features");
-#endif
     if (!group_by.empty() || cache_features)
     {
+        METRIC_UNUSED auto t2 = metrics_.measure_time("Mapnik.Setup.Datasource: Get Features");
         featureset_ptr_list.push_back(ds->features_with_context(q,current_ctx));
     }
     else
     {
         for(std::size_t i = 0; i < active_styles.size(); ++i)
         {
+            METRIC_UNUSED auto t2 = metrics_.measure_time("Mapnik.Setup.Datasource: Get Features");
             featureset_ptr_list.push_back(ds->features_with_context(q,current_ctx));
         }
     }
-#ifdef MAPNIK_METRICS
-    } //Closing t2 scope
-#endif
 }
 
 
@@ -481,9 +468,7 @@ template <typename Processor>
 void feature_style_processor<Processor>::render_material(layer_rendering_material const & mat,
                                                          Processor & p )
 {
-#ifdef MAPNIK_METRICS
-    auto t = metrics_.measure_time("Mapnik.Render");
-#endif
+    METRIC_UNUSED auto t = metrics_.measure_time("Mapnik.Render");
     std::vector<feature_type_style const*> const & active_styles = mat.active_styles_;
     std::vector<featureset_ptr> const & featureset_ptr_list = mat.featureset_ptr_list_;
     if (featureset_ptr_list.empty())
@@ -603,10 +588,8 @@ void feature_style_processor<Processor>::render_style(
     featureset_ptr features,
     proj_transform const& prj_trans)
 {
-#ifdef MAPNIK_METRICS
-    auto t = metrics_.measure_time("Mapnik.Render.Style");
+    METRIC_UNUSED auto t = metrics_.measure_time("Mapnik.Render.Style");
     uint features_count = 0;
-#endif
     p.start_style_processing(*style);
     if (!features)
     {
@@ -618,9 +601,7 @@ void feature_style_processor<Processor>::render_style(
     bool was_painted = false;
     while ((feature = features->next()))
     {
-#ifdef MAPNIK_METRICS
         features_count++;
-#endif
         bool do_else = true;
         bool do_also = false;
         for (rule const* r : rc.get_if_rules() )
@@ -679,9 +660,7 @@ void feature_style_processor<Processor>::render_style(
             }
         }
     }
-#ifdef MAPNIK_METRICS
     metrics_.measure_add("Mapnik.Render.Style.features", features_count);
-#endif
 
     p.painted(p.painted() | was_painted);
     p.end_style_processing(*style);

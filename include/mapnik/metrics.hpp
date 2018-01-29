@@ -60,7 +60,7 @@ enum measurement_t : int_fast8_t
 class MAPNIK_DECL metrics
 {
 public:
-    static bool enabled_ = false;
+    static const bool enabled_ = false;
     inline metrics() {}
     inline metrics(bool) {}
     inline ~metrics() {}

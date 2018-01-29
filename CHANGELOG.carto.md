@@ -7,6 +7,7 @@
 Changes:
  - Use metrics without guards
  - Add docs/metrics.md
+ - Avoid unnecessary copy of features with "cache-features"
 
 ## 3.0.15.3
 

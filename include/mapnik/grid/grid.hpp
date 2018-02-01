@@ -57,7 +57,7 @@ public:
     using feature_key_type = std::map<value_type, lookup_type>;
     using feature_type = std::map<lookup_type, mapnik::feature_ptr>;
     static const value_type base_mask;
-
+    metrics metrics_ = metrics(false);
 private:
     std::size_t width_;
     std::size_t height_;
@@ -216,12 +216,6 @@ public:
             }
         }
     }
-
-#ifdef MAPNIK_METRICS
-public:
-    metrics metrics_ = metrics(false);
-#endif
-
 };
 
 using grid = hit_grid<mapnik::value_integer_pixel>;

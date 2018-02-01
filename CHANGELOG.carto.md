@@ -1,5 +1,21 @@
 # CARTO Mapnik Changelog
 
+## 3.0.15.4
+
+**Release date**: 2018-XX-XX
+
+Changes:
+ - Use metrics without guards
+ - Add docs/metrics.md
+ - Avoid unnecessary copy of features with "cache-features"
+
+## 3.0.15.3
+
+**Release date**: 2018-01-19
+
+Changes:
+ - Switch back to harfbuzz 1.3.0
+
 ## 3.0.15.2
 
 **Release date**: 2018-01-04

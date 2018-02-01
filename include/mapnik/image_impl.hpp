@@ -99,10 +99,8 @@ image<T>::image(image<T> const& rhs)
       offset_(rhs.offset_),
       scaling_(rhs.scaling_),
       premultiplied_alpha_(rhs.premultiplied_alpha_),
-      painted_(rhs.painted_)
-#ifdef MAPNIK_METRICS
-     ,metrics_(rhs.metrics_)
-#endif
+      painted_(rhs.painted_),
+      metrics_(rhs.metrics_)
 {}
 
 template <typename T>
@@ -112,10 +110,8 @@ image<T>::image(image<T> && rhs) noexcept
       offset_(rhs.offset_),
       scaling_(rhs.scaling_),
       premultiplied_alpha_(rhs.premultiplied_alpha_),
-      painted_(rhs.painted_)
-#ifdef MAPNIK_METRICS
-     ,metrics_(std::move(rhs.metrics_))
-#endif
+      painted_(rhs.painted_),
+      metrics_(std::move(rhs.metrics_))
 {
     rhs.dimensions_ = { 0, 0 };
 }
@@ -129,9 +125,7 @@ image<T>& image<T>::operator=(image<T> const &rhs)
     scaling_ = rhs.scaling_;
     premultiplied_alpha_ = rhs.premultiplied_alpha_;
     painted_ = rhs.painted_;
-#ifdef MAPNIK_METRICS
     metrics_ = rhs.metrics_;
-#endif
     return *this;
 }
 
@@ -144,9 +138,7 @@ image<T>& image<T>::operator=(image<T>&& rhs) noexcept
     scaling_ = rhs.scaling_;
     premultiplied_alpha_ = rhs.premultiplied_alpha_;
     painted_ = rhs.painted_;
-#ifdef MAPNIK_METRICS
     metrics_ = std::move(rhs.metrics_);
-#endif
     return *this;
 }
 
@@ -171,9 +163,7 @@ void image<T>::swap(image<T> & rhs)
     std::swap(scaling_, rhs.scaling_);
     std::swap(premultiplied_alpha_, rhs.premultiplied_alpha_);
     std::swap(painted_, rhs.painted_);
-#ifdef MAPNIK_METRICS
     std::swap(metrics_, rhs.metrics_);
-#endif
 }
 
 template <typename T>

@@ -23,8 +23,6 @@
 #ifndef MAPNIK_METRICS_HPP
 #define MAPNIK_METRICS_HPP
 
-#ifdef MAPNIK_METRICS
-
 #include <mapnik/config.hpp>
 
 #include <boost/optional/optional.hpp>
@@ -47,6 +45,35 @@ enum measurement_t : int_fast8_t
     CALLS,
     TOTAL_ENUM_SIZE
 };
+
+#if __has_cpp_attribute(maybe_unused)
+#define METRIC_UNUSED [[maybe_unused]]
+#elif __has_cpp_attribute(gnu::unused)
+#define METRIC_UNUSED [[gnu::unused]]
+#else
+#define METRIC_UNUSED
+#endif
+
+
+#ifndef MAPNIK_METRICS
+
+class MAPNIK_DECL metrics
+{
+public:
+    static const bool enabled_ = false;
+    inline metrics() {}
+    inline metrics(bool) {}
+    inline ~metrics() {}
+
+    METRIC_UNUSED inline int measure_time(std::string const&) { return 0; }
+    inline void measure_add(std::string const&, int64_t,
+                             measurement_t type = measurement_t::UNASSIGNED) {}
+
+    METRIC_UNUSED inline int find(std::string const&, bool) { return 0; }
+    METRIC_UNUSED inline std::string to_string()  { return ""; }
+};
+
+#else
 
 struct MAPNIK_DECL measurement
 {
@@ -172,11 +199,11 @@ private:
     std::shared_ptr<metrics_tree> storage_{new metrics_tree};
 #ifdef MAPNIK_THREADSAFE
     std::shared_ptr<std::mutex> lock_ {new std::mutex};
-#endif
+#endif /* ifdef MAPNIK_THREADSAFE */
 };
 
-} //namespace mapnik
+#endif /* ifndef MAPNIK_METRICS */
 
-#endif /* MAPNIK_METRICS */
+} //namespace mapnik
 
 #endif /* MAPNIK_METRICS_HPP */

@@ -151,7 +151,6 @@ private:
     double val_;
 };
 
-#ifdef MAPNIK_METRICS
 struct get_metrics_visitor
 {
     template <typename T>
@@ -160,7 +159,6 @@ struct get_metrics_visitor
         return data.metrics_;
     }
 };
-#endif
 
 
 } // namespace detail
@@ -238,13 +236,10 @@ MAPNIK_DECL void image_any::set_scaling(double val)
     util::apply_visitor(detail::set_scaling_visitor(val),*this);
 }
 
-#ifdef MAPNIK_METRICS
 MAPNIK_DECL metrics& image_any::get_metrics()
 {
     return util::apply_visitor(detail::get_metrics_visitor(),*this);
 }
-#endif
-
 
 MAPNIK_DECL image_any create_image_any(int width,
                                        int height,

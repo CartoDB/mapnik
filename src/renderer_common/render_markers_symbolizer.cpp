@@ -273,8 +273,8 @@ struct render_marker_symbolizer_visitor
                svg_path_ptr
            > cached_ellipses_;
 
-    static constexpr size_t attributes_cache_size = 128; // maximum number attributes to cache
-    static constexpr size_t ellipses_cache_size = 128; // maximum number ellipses to cache
+    static constexpr size_t attributes_cache_size = 256; // maximum number attributes to cache
+    static constexpr size_t ellipses_cache_size = 256; // maximum number ellipses to cache
 };
 
 #ifdef MAPNIK_THREADSAFE

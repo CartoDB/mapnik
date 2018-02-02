@@ -137,6 +137,10 @@ struct render_marker_symbolizer_visitor
         // works in practice due to symbolizers being created all at once during style loading.
         markers_symbolizer const* attr_key = &sym_;
 
+#ifdef MAPNIK_THREADSAFE
+        std::lock_guard<std::mutex> lock(mutex_);
+#endif
+
         auto attr_it = cached_attributes_.find(attr_key);
         if (attr_it == cached_attributes_.end())
         {
@@ -256,6 +260,10 @@ struct render_marker_symbolizer_visitor
     box2d<double> const& clip_box_;
     ContextType & renderer_context_;
 
+#ifdef MAPNIK_THREADSAFE
+    static std::mutex mutex_;
+#endif
+
     static std::map<
                markers_symbolizer const*,
                std::shared_ptr<svg_attribute_type>
@@ -268,6 +276,11 @@ struct render_marker_symbolizer_visitor
     static constexpr size_t attributes_cache_size = 128; // maximum number attributes to cache
     static constexpr size_t ellipses_cache_size = 128; // maximum number ellipses to cache
 };
+
+#ifdef MAPNIK_THREADSAFE
+template <typename Detector, typename RendererType, typename ContextType>
+std::mutex render_marker_symbolizer_visitor<Detector, RendererType, ContextType>::mutex_;
+#endif
 
 template <typename Detector, typename RendererType, typename ContextType>
 std::map<

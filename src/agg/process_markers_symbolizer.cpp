@@ -112,6 +112,10 @@ struct agg_markers_renderer_context : markers_renderer_context
 
                 std::tuple<svg_path_ptr, svg_path_attrib_data, int> key(src, *reinterpret_cast<svg_path_attrib_data const*>(&attrs[0]), sample_idx);
 
+#ifdef MAPNIK_THREADSAFE
+                std::lock_guard<std::mutex> lock(mutex_);
+#endif
+
                 auto it = cached_images_.find(key);
                 if (it == cached_images_.end())
                 {
@@ -229,6 +233,10 @@ private:
     RasterizerType & ras_;
     composite_mode_e comp_op_;
 
+#ifdef MAPNIK_THREADSAFE
+    static std::mutex mutex_;
+#endif
+
     static std::map<
                std::tuple<svg_path_ptr, svg_path_attrib_data, int>,
                std::pair<std::shared_ptr<image_rgba8>, std::shared_ptr<image_rgba8>>
@@ -237,6 +245,11 @@ private:
     static constexpr size_t cache_size = 128; // maximum number of images to cache
     static constexpr int sampling_rate = 4; // this determines subpixel precision. The larger the value, the closer the solution will be compared to the reference but will reduce the cache hits
 };
+
+#ifdef MAPNIK_THREADSAFE
+template <typename SvgRenderer, typename BufferType, typename RasterizerType>
+std::mutex agg_markers_renderer_context<SvgRenderer, BufferType, RasterizerType>::mutex_;
+#endif
 
 template <typename SvgRenderer, typename BufferType, typename RasterizerType>
 std::map<

@@ -7,7 +7,6 @@
 Changes:
  - Use metrics without guards
  - Add docs/metrics.md
- - Avoid unnecessary copy of features with "cache-features"
  - PostGIS: Variables in postgis SQL queries must now additionally be wrapped in `!` (refs [#29](https://github.com/CartoDB/mapnik/issues/29), [mapnik/#3618](https://github.com/mapnik/mapnik/pull/3618)):
 ```sql
 -- Before

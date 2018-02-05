@@ -64,6 +64,7 @@ before_install:
  - export COVERAGE=${COVERAGE:-false}
  - export BENCH=${BENCH:-false}
  - git_submodule_update --init
+ - git_submodule_update --remote
 
 install:
  - on 'osx' export DATA_PATH=$(brew --prefix)/var/postgres

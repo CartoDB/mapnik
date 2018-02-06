@@ -1,0 +1,25 @@
+<Map background-color="steelblue" srs="+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs">
+  <Style name="test" opacity="1.0">
+    <Rule>
+      <Filter>[class] = 0</Filter>
+      <MarkersSymbolizer opacity="0.3" allow-overlap="1" fill="rgb(255,0,39)" fill-opacity="0.7" marker-type="ellipse" placement="point" stroke="rgb(255,255,255)" stroke-opacity="0.9" stroke-width="0" width="3" comp-op="src-over" /> 
+    </Rule>
+    <Rule>
+      <Filter>[class] = 1</Filter>
+      <MarkersSymbolizer opacity="0.7" allow-overlap="1" fill="rgb(0,255,0)" fill-opacity="0.9" marker-type="ellipse" placement="point" stroke="rgb(0,0,0)" stroke-opacity="0.8" stroke-width="0" width="4" comp-op="src-over" /> 
+    </Rule>
+  </Style>
+  <Layer name="test" srs="+proj=merc +datum=WGS84 +over">
+    <StyleName>test</StyleName>
+    <Datasource>
+       <Parameter name="type"><![CDATA[postgis]]></Parameter>
+       <Parameter name="dbname">test_random_points</Parameter>
+       <Parameter name="extent_from_subquery">true</Parameter>
+       <Parameter name="geometry_field"><![CDATA[geom]]></Parameter>
+       <Parameter name="srid"><![CDATA[3857]]></Parameter>
+       <Parameter name="table"><![CDATA[
+            (select geom, attr as class from test_random_points) as s
+       ]]></Parameter>
+    </Datasource>
+  </Layer>
+</Map>

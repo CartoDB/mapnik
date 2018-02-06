@@ -107,6 +107,6 @@ script:
  - RESULT=0
  - make test || RESULT=$?
  # we allow visual failures with g++ for now: https://github.com/mapnik/mapnik/issues/3567
- - if [[ ${RESULT} != 0 ]] && [[ ${CXX} =~ 'clang++' ]] && [[ ${TRAVIS_OS_NAME} != 'osx' ]]; then false; fi;
+ - if [[ ${RESULT} != 0 ]] && [[ ${CXX} =~ 'clang++' ]]; then false; fi;
  - enabled ${COVERAGE} coverage
  - enabled ${BENCH} make bench

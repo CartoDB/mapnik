@@ -49,7 +49,7 @@ matrix:
     - os: osx
       compiler: ": clang-osx"
       # https://docs.travis-ci.com/user/languages/objective-c/#Supported-OS-X-iOS-SDK-versions
-      osx_image: xcode7.3 # upgrades clang from 6 -> 7
+      osx_image: xcode9.2 # this seems to be in sync with Linux clang
       env: JOBS=4 CXX="ccache clang++ -Qunused-arguments"
 
 before_install:
@@ -109,4 +109,4 @@ script:
  # we allow visual failures with g++ for now: https://github.com/mapnik/mapnik/issues/3567
  - if [[ ${RESULT} != 0 ]] && [[ ${CXX} =~ 'clang++' ]]; then false; fi;
  - enabled ${COVERAGE} coverage
- - enabled ${BENCH} make bench
+ - enabled ${BENCH} make bench - enabled ${BENCH} make bench - enabled ${BENCH} make bench

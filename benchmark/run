@@ -66,3 +66,16 @@ run test_offset_converter 10 1000
 ./benchmark/out/test_quad_tree \
   --iterations 1000 \
   --threads 10
+
+dropdb --if-exists test_random_points
+createdb -T template_postgis test_random_points
+python benchmark/utils/random_points.py test_random_points 100000 | psql -q test_random_points
+
+./benchmark/out/test_rendering \
+  --name "100000 marker rendering" \
+  --map benchmark/data/random_markers.xml  \
+  --extent -180.0,-120.0,180.0,120.0 \
+  --width 600 \
+  --height 600 \
+  --iterations 10 \
+  --threads 1

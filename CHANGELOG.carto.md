@@ -2,7 +2,7 @@
 
 ## 3.0.15.4
 
-**Release date**: 2018-XX-XX
+**Release date**: 2018-02-22
 
 Changes:
  - Use metrics without guards
@@ -15,6 +15,7 @@ SELECT ... WHERE trait = @variable
 -- Now
 SELECT ... WHERE trait = !@variable!
 ```
+ - Add an internal cache to the marker symbolizer in the agg renderer.
 
 ## 3.0.15.3
 

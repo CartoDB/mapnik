@@ -189,12 +189,8 @@ struct agg_markers_renderer_context : markers_renderer_context
 
                 // Set up blitting transformation. We will add a small offset due to sampling
                 agg::trans_affine marker_tr_copy(marker_tr);
-                marker_tr_copy.tx = std::floor(marker_tr.tx) + (dx - sample_x / sampling_rate) + x0;
-                marker_tr_copy.ty = std::floor(marker_tr.ty) + (dy - sample_y / sampling_rate) + y0;
-                marker_tr_copy.sx = 1.0;
-                marker_tr_copy.sy = 1.0;
-                marker_tr_copy.shx = 0.0;
-                marker_tr_copy.shy = 0.0;
+                marker_tr_copy.tx += x0 - dx;
+                marker_tr_copy.ty += y0 - dy;
 
                 // Blit stroke and fill images
                 if (it->second.first)

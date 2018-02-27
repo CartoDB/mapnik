@@ -146,7 +146,7 @@ struct agg_markers_renderer_context : markers_renderer_context
                         attrs_copy[0].stroke_gradient.set_gradient_type(NO_GRADIENT);
 
                         SvgRenderer svg_renderer(path, attrs_copy);
-                        render_vector_marker(svg_renderer, ras_, renb, src->bounding_box(), marker_tr_copy, 1.0f, false);
+                        render_vector_marker(svg_renderer, ras_, renb, src->bounding_box(), marker_tr_copy, 1.0f, params.snap_to_pixels);
 
                         if (std::all_of(fill_img->begin(), fill_img->end(), [](uint32_t val) { return val == 0; }))
                         {
@@ -169,7 +169,7 @@ struct agg_markers_renderer_context : markers_renderer_context
                         attrs_copy[0].fill_gradient.set_gradient_type(NO_GRADIENT);
 
                         SvgRenderer svg_renderer(path, attrs_copy);
-                        render_vector_marker(svg_renderer, ras_, renb, src->bounding_box(), marker_tr_copy, 1.0f, false);
+                        render_vector_marker(svg_renderer, ras_, renb, src->bounding_box(), marker_tr_copy, 1.0f, params.snap_to_pixels);
 
                         if (std::all_of(stroke_img->begin(), stroke_img->end(), [](uint32_t val) { return val == 0; }))
                         {

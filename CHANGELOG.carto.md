@@ -1,5 +1,13 @@
 # CARTO Mapnik Changelog
 
+## 3.0.15.5
+
+**Release date**: 2018-02-28
+
+Changes:
+ - Improve precision of the marker symbolizer cache.
+ - Travis: Run visual test with overwrite and upload differences to transfer.sh
+
 ## 3.0.15.4
 
 **Release date**: 2018-02-22

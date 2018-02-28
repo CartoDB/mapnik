@@ -3,6 +3,8 @@
 set -o pipefail
 set -eu
 
+VISUAL_FLAGS=${VISUAL_FLAGS:-''}
+
 failures=0
 
 cd "$( dirname "${BASH_SOURCE[0]}" )"
@@ -47,7 +49,7 @@ if [ -d "test/data" ]; then
         fi
         if [[ -f ./test/visual/run ]]; then
             ran_a_test=true
-            ./test/visual/run -j $JOBS || failures=$((failures+$?))
+            ./test/visual/run $VISUAL_FLAGS -j $JOBS || failures=$((failures+$?))
         else
             run_warn "Skipping visual tests since they were not built"
         fi

@@ -115,7 +115,7 @@ unsigned console_report::summary(result_list const & results)
         s << "total: \t" << duration_cast<milliseconds>(total).count() << " milliseconds" << std::endl;
     }
 
-    return fail + error;
+    return fail + error + overwrite;
 }
 
 void console_short_report::report(result const & r)

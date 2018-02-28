@@ -105,7 +105,7 @@ script:
  - scripts/travis-command-wrapper.py -s "date" -i 120 --deadline=$(( $(date +%s) + ${DURATION} )) make
  - RESULT=0
  - VISUAL_FLAGS="--overwrite" make test || RESULT=$?
- # we allow visual failures with g++ for now: https://github.com/mapnik/mapnik/issues/3567
- - if [[ ${RESULT} != 0 ]] && [[ ${CXX} =~ 'clang++' ]] && [[ $(uname -s) == 'Linux' ]]; then cd test/data-visual/ && git diff --name-only | while read line ; do curl https://transfer.sh/$(echo $line | sed 's/\//_/g') --upload-file $line; echo " "; done ; cd ../.. ; false; fi;
+ # We only report errors for Linux with clang++
+ - if [[ ${RESULT} != 0 ]]; then cd test/data-visual/ && git diff --name-only | while read line ; do curl https://transfer.sh/$(echo $line | sed 's/\//_/g') --upload-file $line; echo " "; done ; cd ../.. ; if [[ ${CXX} =~ 'clang++' ]] && [[ $(uname -s) == 'Linux' ]]; then false; fi; fi;
  - enabled ${COVERAGE} coverage
  - enabled ${BENCH} make bench

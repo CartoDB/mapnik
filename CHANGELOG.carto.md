@@ -2,7 +2,7 @@
 
 ## 3.0.15.5
 
-**Release date**: 2018-02-28
+**Release date**: 2018-03-01
 
 Changes:
  - Improve precision of the marker symbolizer cache.

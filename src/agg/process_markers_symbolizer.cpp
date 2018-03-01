@@ -146,7 +146,7 @@ struct agg_markers_renderer_context : markers_renderer_context
                         attrs_copy[0].stroke_gradient.set_gradient_type(NO_GRADIENT);
 
                         SvgRenderer svg_renderer(path, attrs_copy);
-                        render_vector_marker(svg_renderer, ras_, renb, src->bounding_box(), marker_tr_copy, 1.0f, false);
+                        render_vector_marker(svg_renderer, ras_, renb, src->bounding_box(), marker_tr_copy, 1.0f, params.snap_to_pixels);
 
                         if (std::all_of(fill_img->begin(), fill_img->end(), [](uint32_t val) { return val == 0; }))
                         {
@@ -169,7 +169,7 @@ struct agg_markers_renderer_context : markers_renderer_context
                         attrs_copy[0].fill_gradient.set_gradient_type(NO_GRADIENT);
 
                         SvgRenderer svg_renderer(path, attrs_copy);
-                        render_vector_marker(svg_renderer, ras_, renb, src->bounding_box(), marker_tr_copy, 1.0f, false);
+                        render_vector_marker(svg_renderer, ras_, renb, src->bounding_box(), marker_tr_copy, 1.0f, params.snap_to_pixels);
 
                         if (std::all_of(stroke_img->begin(), stroke_img->end(), [](uint32_t val) { return val == 0; }))
                         {
@@ -189,12 +189,8 @@ struct agg_markers_renderer_context : markers_renderer_context
 
                 // Set up blitting transformation. We will add a small offset due to sampling
                 agg::trans_affine marker_tr_copy(marker_tr);
-                marker_tr_copy.tx = std::floor(marker_tr.tx) + (dx - sample_x / sampling_rate) + x0;
-                marker_tr_copy.ty = std::floor(marker_tr.ty) + (dy - sample_y / sampling_rate) + y0;
-                marker_tr_copy.sx = 1.0;
-                marker_tr_copy.sy = 1.0;
-                marker_tr_copy.shx = 0.0;
-                marker_tr_copy.shy = 0.0;
+                marker_tr_copy.tx += x0 - dx;
+                marker_tr_copy.ty += y0 - dy;
 
                 // Blit stroke and fill images
                 if (it->second.first)

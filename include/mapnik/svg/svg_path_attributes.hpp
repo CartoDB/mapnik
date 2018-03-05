@@ -34,7 +34,7 @@
 #include "agg_trans_affine.h"
 #pragma GCC diagnostic pop
 
-#include <utility>
+#include <tuple>
 
 namespace mapnik {
 namespace svg {
@@ -142,6 +142,21 @@ struct path_attributes
 
     bool operator <(const path_attributes &b) const
     {
+        if (fill_color < b.fill_color) return true;
+        if (b.fill_color < fill_color) return false;
+
+        if (stroke_color < b.stroke_color) return true;
+        if (b.stroke_color < stroke_color) return false;
+
+        if (fill_gradient < b.fill_gradient) return true;
+        if (b.fill_gradient < fill_gradient) return false;
+
+        if (stroke_gradient < b.stroke_gradient) return true;
+        if (b.stroke_gradient < stroke_gradient) return false;
+
+        if (!transform.is_equal(b.transform)) return transform < b.transform;
+
+
         return
             std::tie(opacity,
                      fill_opacity,
@@ -149,8 +164,6 @@ struct path_attributes
                      miter_limit,
                      stroke_width,
                      index,
-                     fill_color.to_double,
-                     stroke_color.to_double,
                      line_join,
                      line_cap,
                      fill_flag,
@@ -169,8 +182,6 @@ struct path_attributes
                      b.miter_limit,
                      b.stroke_width,
                      b.index,
-                     b.fill_color.to_double,
-                     b.stroke_color.to_double,
                      b.line_join,
                      b.line_cap,
                      b.fill_flag,

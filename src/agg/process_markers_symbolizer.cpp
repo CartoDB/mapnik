@@ -115,9 +115,16 @@ struct agg_markers_renderer_context : markers_renderer_context
 #ifdef MAPNIK_THREADSAFE
                 std::lock_guard<std::mutex> lock(mutex_);
 #endif
+                std::shared_ptr<image_rgba8> fill_img;
+                std::shared_ptr<image_rgba8> stroke_img;
 
                 auto it = cached_images_.find(key);
-                if (it == cached_images_.end())
+                if (it != cached_images_.end())
+                {
+                    fill_img = it->second.first;
+                    stroke_img = it->second.second;
+                }
+                else
                 {
                     // Calculate canvas size
                     int width  = static_cast<int>(std::ceil(src->bounding_box().width()  + 2.0 * margin)) + 2;
@@ -132,12 +139,11 @@ struct agg_markers_renderer_context : markers_renderer_context
                     marker_tr_copy.ty = sample_y / sampling_rate - y0;
 
                     // Create fill image
-                    std::shared_ptr<image_rgba8> fill_img;
                     if (attrs[0].fill_flag || attrs[0].fill_gradient.get_gradient_type() != NO_GRADIENT)
                     {
                         fill_img = std::make_shared<image_rgba8>(width, height, true);
 
-                        agg::rendering_buffer buf(fill_img->bytes(), width, height, 4 * width);
+                        agg::rendering_buffer buf(fill_img->bytes(), fill_img->width(), fill_img->height(), fill_img->row_size());
                         pixfmt_type pixf(buf);
                         renderer_base renb(pixf);
 
@@ -155,12 +161,11 @@ struct agg_markers_renderer_context : markers_renderer_context
                     }
 
                     // Create stroke image
-                    std::shared_ptr<image_rgba8> stroke_img;
                     if (attrs[0].stroke_flag || attrs[0].stroke_gradient.get_gradient_type() != NO_GRADIENT)
                     {
                         stroke_img = std::make_shared<image_rgba8>(width, height, true);
 
-                        agg::rendering_buffer buf(stroke_img->bytes(), width, height, 4 * width);
+                        agg::rendering_buffer buf(stroke_img->bytes(), stroke_img->width(), stroke_img->height(), stroke_img->row_size());
                         pixfmt_type pixf(buf);
                         renderer_base renb(pixf);
 
@@ -181,7 +186,7 @@ struct agg_markers_renderer_context : markers_renderer_context
                     {
                         cached_images_.erase(cached_images_.begin());
                     }
-                    it = cached_images_.emplace(key, std::make_pair(fill_img, stroke_img)).first;
+                    cached_images_.emplace(key, std::make_pair(fill_img, stroke_img));
 
                     // Restore clip box
                     ras_.clip_box(0, 0, pixf_.width(), pixf_.height());
@@ -193,13 +198,13 @@ struct agg_markers_renderer_context : markers_renderer_context
                 marker_tr_copy.ty += y0 - dy;
 
                 // Blit stroke and fill images
-                if (it->second.first)
+                if (fill_img)
                 {
-                    render_raster_marker(renb_, ras_, *it->second.first, marker_tr_copy, params.opacity, params.scale_factor, params.snap_to_pixels);
+                    render_raster_marker(renb_, ras_, *fill_img, marker_tr_copy, params.opacity, params.scale_factor, params.snap_to_pixels);
                 }
-                if (it->second.second)
+                if (stroke_img)
                 {
-                    render_raster_marker(renb_, ras_, *it->second.second, marker_tr_copy, params.opacity, params.scale_factor, params.snap_to_pixels);
+                    render_raster_marker(renb_, ras_, *stroke_img, marker_tr_copy, params.opacity, params.scale_factor, params.snap_to_pixels);
                 }
                 return;
             }

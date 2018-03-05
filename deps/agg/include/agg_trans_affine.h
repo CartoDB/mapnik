@@ -244,6 +244,16 @@ namespace agg
             return !is_equal(m, affine_epsilon);
         }
 
+        bool operator < (const trans_affine& m) const
+        {
+            if (sx != m.sx) return sx < m.sx;
+            if (shy != m.shy) return shy < m.shy;
+            if (shx != m.shx) return shx < m.shx;
+            if (sy != m.sy) return sy < m.sy;
+            if (tx != m.tx) return tx < m.tx;
+            return ty < m.ty;
+        }
+
         //-------------------------------------------- Transformations
         // Direct transformation of x and y
         void transform(double* x, double* y) const;

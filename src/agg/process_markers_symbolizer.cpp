@@ -135,8 +135,8 @@ struct agg_markers_renderer_context : markers_renderer_context
 
                     // Build local transformation matrix by resetting translation coordinates
                     agg::trans_affine marker_tr_copy(marker_tr);
-                    marker_tr_copy.tx = sample_x / sampling_rate - x0;
-                    marker_tr_copy.ty = sample_y / sampling_rate - y0;
+                    marker_tr_copy.tx = dx - x0;
+                    marker_tr_copy.ty = dy - y0;
 
                     // Create fill image
                     if (attrs[0].fill_flag || attrs[0].fill_gradient.get_gradient_type() != NO_GRADIENT)
@@ -194,8 +194,7 @@ struct agg_markers_renderer_context : markers_renderer_context
 
                 // Set up blitting transformation. We will add a small offset due to sampling
                 agg::trans_affine marker_tr_copy(marker_tr);
-                marker_tr_copy.tx += x0 - dx;
-                marker_tr_copy.ty += y0 - dy;
+                marker_tr_copy.translate(x0 - dx, y0 - dy);
 
                 // Blit stroke and fill images
                 if (fill_img)

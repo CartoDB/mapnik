@@ -95,6 +95,8 @@ public:
     void get_control_points(double &x1, double &y1, double &x2, double &y2, double &r) const;
     void get_control_points(double &x1, double &y1, double &x2, double &y2) const;
 
+    bool operator <(const gradient &b) const;
+
 private:
     void swap(gradient& other) noexcept;
 };

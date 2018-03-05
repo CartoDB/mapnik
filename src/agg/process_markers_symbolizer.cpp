@@ -51,8 +51,6 @@ namespace mapnik {
 
 namespace detail {
 
-using svg_path_attrib_data = std::array<unsigned char, sizeof(svg::path_attributes)>;
-
 template <typename SvgRenderer, typename BufferType, typename RasterizerType>
 struct agg_markers_renderer_context : markers_renderer_context
 {
@@ -110,7 +108,7 @@ struct agg_markers_renderer_context : markers_renderer_context
 
                 int sample_idx = static_cast<int>(sample_y) * sampling_rate + static_cast<int>(sample_x);
 
-                std::tuple<svg_path_ptr, svg_path_attrib_data, int> key(src, *reinterpret_cast<svg_path_attrib_data const*>(&attrs[0]), sample_idx);
+                std::tuple<svg_path_ptr, svg::path_attributes, int> key(src, attrs[0], sample_idx);
 
 #ifdef MAPNIK_THREADSAFE
                 std::lock_guard<std::mutex> lock(mutex_);
@@ -238,9 +236,9 @@ private:
 #endif
 
     static std::map<
-               std::tuple<svg_path_ptr, svg_path_attrib_data, int>,
-               std::pair<std::shared_ptr<image_rgba8>, std::shared_ptr<image_rgba8>>
-           > cached_images_;
+		std::tuple<svg_path_ptr, svg::path_attributes, int>,
+		std::pair<std::shared_ptr<image_rgba8>, std::shared_ptr<image_rgba8>>
+	    > cached_images_;
 
     static constexpr size_t cache_size = 4096; // maximum number of images to cache. Note that the number of actual images stored depends also on sampling_rate
     static constexpr int sampling_rate = 4; // this determines subpixel precision. The larger the value, the closer the solution will be compared to the reference but will reduce the cache hits
@@ -253,9 +251,9 @@ std::mutex agg_markers_renderer_context<SvgRenderer, BufferType, RasterizerType>
 
 template <typename SvgRenderer, typename BufferType, typename RasterizerType>
 std::map<
-    std::tuple<svg_path_ptr, svg_path_attrib_data, int>,
+    std::tuple<svg_path_ptr, svg::path_attributes, int>,
     std::pair<std::shared_ptr<image_rgba8>, std::shared_ptr<image_rgba8>>
-> agg_markers_renderer_context<SvgRenderer, BufferType, RasterizerType>::cached_images_;
+> agg_markers_renderer_context<SvgRenderer, BufferType, RasterizerType>::cached_images_ = {};
 
 } // namespace detail
 

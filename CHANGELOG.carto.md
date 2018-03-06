@@ -5,6 +5,7 @@
 **Release date**: 2018-mm-dd
 
 Changes:
+ - Fixed some issues with memory management of cache and calculation of cache keys.
  - Increased cache sampling_rate to 8, which makes visual tests more robust.
  - Bring back osx visual tests checks
 

@@ -51,8 +51,6 @@ namespace mapnik {
 
 namespace detail {
 
-using svg_path_attrib_data = std::array<unsigned char, sizeof(svg::path_attributes)>;
-
 template <typename SvgRenderer, typename BufferType, typename RasterizerType>
 struct agg_markers_renderer_context : markers_renderer_context
 {
@@ -110,14 +108,21 @@ struct agg_markers_renderer_context : markers_renderer_context
 
                 int sample_idx = static_cast<int>(sample_y) * sampling_rate + static_cast<int>(sample_x);
 
-                std::tuple<svg_path_ptr, svg_path_attrib_data, int> key(src, *reinterpret_cast<svg_path_attrib_data const*>(&attrs[0]), sample_idx);
+                std::tuple<svg_path_ptr, int, svg::path_attributes> key(src, sample_idx, attrs[0]);
 
 #ifdef MAPNIK_THREADSAFE
                 std::lock_guard<std::mutex> lock(mutex_);
 #endif
+                std::shared_ptr<image_rgba8> fill_img;
+                std::shared_ptr<image_rgba8> stroke_img;
 
                 auto it = cached_images_.find(key);
-                if (it == cached_images_.end())
+                if (it != cached_images_.end())
+                {
+                    fill_img = it->second.first;
+                    stroke_img = it->second.second;
+                }
+                else
                 {
                     // Calculate canvas size
                     int width  = static_cast<int>(std::ceil(src->bounding_box().width()  + 2.0 * margin)) + 2;
@@ -128,16 +133,15 @@ struct agg_markers_renderer_context : markers_renderer_context
 
                     // Build local transformation matrix by resetting translation coordinates
                     agg::trans_affine marker_tr_copy(marker_tr);
-                    marker_tr_copy.tx = sample_x / sampling_rate - x0;
-                    marker_tr_copy.ty = sample_y / sampling_rate - y0;
+                    marker_tr_copy.tx = dx - x0;
+                    marker_tr_copy.ty = dy - y0;
 
                     // Create fill image
-                    std::shared_ptr<image_rgba8> fill_img;
                     if (attrs[0].fill_flag || attrs[0].fill_gradient.get_gradient_type() != NO_GRADIENT)
                     {
                         fill_img = std::make_shared<image_rgba8>(width, height, true);
 
-                        agg::rendering_buffer buf(fill_img->bytes(), width, height, 4 * width);
+                        agg::rendering_buffer buf(fill_img->bytes(), fill_img->width(), fill_img->height(), fill_img->row_size());
                         pixfmt_type pixf(buf);
                         renderer_base renb(pixf);
 
@@ -146,7 +150,7 @@ struct agg_markers_renderer_context : markers_renderer_context
                         attrs_copy[0].stroke_gradient.set_gradient_type(NO_GRADIENT);
 
                         SvgRenderer svg_renderer(path, attrs_copy);
-                        render_vector_marker(svg_renderer, ras_, renb, src->bounding_box(), marker_tr_copy, 1.0f, params.snap_to_pixels);
+                        render_vector_marker(svg_renderer, ras_, renb, src->bounding_box(), marker_tr_copy, 1.0, params.snap_to_pixels);
 
                         if (std::all_of(fill_img->begin(), fill_img->end(), [](uint32_t val) { return val == 0; }))
                         {
@@ -155,12 +159,11 @@ struct agg_markers_renderer_context : markers_renderer_context
                     }
 
                     // Create stroke image
-                    std::shared_ptr<image_rgba8> stroke_img;
                     if (attrs[0].stroke_flag || attrs[0].stroke_gradient.get_gradient_type() != NO_GRADIENT)
                     {
                         stroke_img = std::make_shared<image_rgba8>(width, height, true);
 
-                        agg::rendering_buffer buf(stroke_img->bytes(), width, height, 4 * width);
+                        agg::rendering_buffer buf(stroke_img->bytes(), stroke_img->width(), stroke_img->height(), stroke_img->row_size());
                         pixfmt_type pixf(buf);
                         renderer_base renb(pixf);
 
@@ -169,7 +172,7 @@ struct agg_markers_renderer_context : markers_renderer_context
                         attrs_copy[0].fill_gradient.set_gradient_type(NO_GRADIENT);
 
                         SvgRenderer svg_renderer(path, attrs_copy);
-                        render_vector_marker(svg_renderer, ras_, renb, src->bounding_box(), marker_tr_copy, 1.0f, params.snap_to_pixels);
+                        render_vector_marker(svg_renderer, ras_, renb, src->bounding_box(), marker_tr_copy, 1.0, params.snap_to_pixels);
 
                         if (std::all_of(stroke_img->begin(), stroke_img->end(), [](uint32_t val) { return val == 0; }))
                         {
@@ -181,7 +184,7 @@ struct agg_markers_renderer_context : markers_renderer_context
                     {
                         cached_images_.erase(cached_images_.begin());
                     }
-                    it = cached_images_.emplace(key, std::make_pair(fill_img, stroke_img)).first;
+                    cached_images_.emplace(key, std::make_pair(fill_img, stroke_img));
 
                     // Restore clip box
                     ras_.clip_box(0, 0, pixf_.width(), pixf_.height());
@@ -189,17 +192,16 @@ struct agg_markers_renderer_context : markers_renderer_context
 
                 // Set up blitting transformation. We will add a small offset due to sampling
                 agg::trans_affine marker_tr_copy(marker_tr);
-                marker_tr_copy.tx += x0 - dx;
-                marker_tr_copy.ty += y0 - dy;
+                marker_tr_copy.translate(x0 - dx, y0 - dy);
 
                 // Blit stroke and fill images
-                if (it->second.first)
+                if (fill_img)
                 {
-                    render_raster_marker(renb_, ras_, *it->second.first, marker_tr_copy, params.opacity, params.scale_factor, params.snap_to_pixels);
+                    render_raster_marker(renb_, ras_, *fill_img, marker_tr_copy, params.opacity, params.scale_factor, params.snap_to_pixels);
                 }
-                if (it->second.second)
+                if (stroke_img)
                 {
-                    render_raster_marker(renb_, ras_, *it->second.second, marker_tr_copy, params.opacity, params.scale_factor, params.snap_to_pixels);
+                    render_raster_marker(renb_, ras_, *stroke_img, marker_tr_copy, params.opacity, params.scale_factor, params.snap_to_pixels);
                 }
                 return;
             }
@@ -234,12 +236,12 @@ private:
 #endif
 
     static std::map<
-               std::tuple<svg_path_ptr, svg_path_attrib_data, int>,
-               std::pair<std::shared_ptr<image_rgba8>, std::shared_ptr<image_rgba8>>
-           > cached_images_;
+		std::tuple<svg_path_ptr, int, svg::path_attributes>,
+		std::pair<std::shared_ptr<image_rgba8>, std::shared_ptr<image_rgba8>>
+	    > cached_images_;
 
     static constexpr size_t cache_size = 4096; // maximum number of images to cache. Note that the number of actual images stored depends also on sampling_rate
-    static constexpr int sampling_rate = 4; // this determines subpixel precision. The larger the value, the closer the solution will be compared to the reference but will reduce the cache hits
+    static constexpr int sampling_rate = 8; // this determines subpixel precision. The larger the value, the closer the solution will be compared to the reference but will reduce the cache hits
 };
 
 #ifdef MAPNIK_THREADSAFE
@@ -249,9 +251,9 @@ std::mutex agg_markers_renderer_context<SvgRenderer, BufferType, RasterizerType>
 
 template <typename SvgRenderer, typename BufferType, typename RasterizerType>
 std::map<
-    std::tuple<svg_path_ptr, svg_path_attrib_data, int>,
+    std::tuple<svg_path_ptr, int, svg::path_attributes>,
     std::pair<std::shared_ptr<image_rgba8>, std::shared_ptr<image_rgba8>>
-> agg_markers_renderer_context<SvgRenderer, BufferType, RasterizerType>::cached_images_;
+> agg_markers_renderer_context<SvgRenderer, BufferType, RasterizerType>::cached_images_ = {};
 
 } // namespace detail
 

@@ -23,6 +23,8 @@
 #include <mapnik/gradient.hpp>
 #include <mapnik/enumeration.hpp>
 
+#include <tuple> // needed for std::tie
+
 namespace mapnik
 {
 
@@ -153,6 +155,22 @@ void gradient::get_control_points(double &x1, double &y1, double &x2, double &y2
     y1 = y1_;
     x2 = x2_;
     y2 = y2_;
+}
+
+bool gradient::operator <(const gradient &b) const
+{
+    if (stops_.size() != b.stops_.size()) return stops_.size() < b.stops_.size();
+    for (size_t i = 0; i < stops_.size(); i++)
+    {
+        if (stops_[i].first != b.stops_[i].first) return stops_[i].first < b.stops_[i].first;
+        if (stops_[i].second.rgba() != b.stops_[i].second.rgba())
+            return stops_[i].second.rgba() < b.stops_[i].second.rgba();
+    }
+
+    if (!transform_.is_equal(b.transform_)) return transform_ < b.transform_;
+
+    return std::tie(x1_, y1_, x2_, y2_, r_, units_, gradient_type_)  <
+           std::tie(b.x1_, b.y1_, b.x2_, b.y2_, b.r_, b.units_,  b.gradient_type_);
 }
 
 }

@@ -241,7 +241,7 @@ private:
 	    > cached_images_;
 
     static constexpr size_t cache_size = 4096; // maximum number of images to cache. Note that the number of actual images stored depends also on sampling_rate
-    static constexpr int sampling_rate = 4; // this determines subpixel precision. The larger the value, the closer the solution will be compared to the reference but will reduce the cache hits
+    static constexpr int sampling_rate = 8; // this determines subpixel precision. The larger the value, the closer the solution will be compared to the reference but will reduce the cache hits
 };
 
 #ifdef MAPNIK_THREADSAFE

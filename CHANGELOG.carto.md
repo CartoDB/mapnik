@@ -2,7 +2,7 @@
 
 ## 3.0.15.6
 
-**Release date**: 2018-mm-dd
+**Release date**: 2018-03-06
 
 Changes:
  - Fixed some issues with memory management of cache and calculation of cache keys.

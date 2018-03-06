@@ -9,7 +9,7 @@ _/      _/    _/_/_/  _/_/_/    _/    _/  _/  _/    _/
 ```
 
 [![Build Status Linux](https://api.travis-ci.org/CartoDB/mapnik.svg?branch=v3.0.15-carto)](http://travis-ci.org/CartoDB/mapnik)
-[![Coverage Status](https://coveralls.io/repos/CartoDB/mapnik/badge.svg?branch=v3.0.15-carto&service=github)](https://coveralls.io/github/v3.0.15-carto/mapnik?branch=v3.0.15-carto)
+[![Coverage Status](https://coveralls.io/repos/CartoDB/mapnik/badge.svg?branch=v3.0.15-carto&service=github)](https://coveralls.io/github/CartoDB/mapnik?branch=v3.0.15-carto)
 
 Mapnik is an open source toolkit for developing mapping applications. At the core is a C++ shared library providing algorithms and patterns for spatial data access and visualization.
 

@@ -34,7 +34,7 @@
 #include "agg_trans_affine.h"
 #pragma GCC diagnostic pop
 
-#include <tuple>
+#include <tuple> // needed for std::tie
 
 namespace mapnik {
 namespace svg {

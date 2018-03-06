@@ -23,7 +23,7 @@
 #include <mapnik/gradient.hpp>
 #include <mapnik/enumeration.hpp>
 
-#include <tuple>
+#include <tuple> // needed for std::tie
 
 namespace mapnik
 {

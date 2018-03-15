@@ -46,12 +46,16 @@ enum measurement_t : int_fast8_t
     TOTAL_ENUM_SIZE
 };
 
-#if __has_cpp_attribute(maybe_unused)
-#define METRIC_UNUSED [[maybe_unused]]
-#elif __has_cpp_attribute(gnu::unused)
-#define METRIC_UNUSED [[gnu::unused]]
+#if defined(__has_cpp_attribute) 
+    #if __has_cpp_attribute(maybe_unused)
+        #define METRIC_UNUSED [[maybe_unused]]
+    #elif __has_cpp_attribute(gnu::unused)
+        #define METRIC_UNUSED [[gnu::unused]]
+    #else
+        #define METRIC_UNUSED
+    #endif
 #else
-#define METRIC_UNUSED
+    #define METRIC_UNUSED
 #endif
 
 

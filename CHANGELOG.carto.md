@@ -1,5 +1,12 @@
 # CARTO Mapnik Changelog
 
+## 3.0.15.7
+
+**Release date**: 2018-XX-XX
+
+Changes:
+ - Metrics: Compatibily fix for older compilers (80ecf2741 by @dprophet).
+
 ## 3.0.15.6
 
 **Release date**: 2018-03-06

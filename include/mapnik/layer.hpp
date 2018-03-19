@@ -171,6 +171,16 @@ public:
     bool cache_features() const;
 
     /*!
+     * @param rasterized_symbols_cache_enabled Set whether this layer's rasterized symbols should be used by multiple renders.
+     */
+    void set_rasterized_symbols_cache_enabled(bool is_enabled);
+
+    /*!
+     * @return whether this layer's rasterized symbols will be used by multiple renders.
+     */
+    bool rasterized_symbols_cache_enabled() const;
+
+    /*!
      * @param column Set the field rendering of this layer is grouped by.
      */
     void set_group_by(std::string const& column);
@@ -213,6 +223,7 @@ private:
     bool queryable_;
     bool clear_label_cache_;
     bool cache_features_;
+    bool rasterized_symbols_cache_enabled_;
     std::string group_by_;
     std::vector<std::string> styles_;
     datasource_ptr ds_;

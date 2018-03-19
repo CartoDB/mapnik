@@ -548,6 +548,11 @@ void serialize_layer( ptree & map_node, layer const& lyr, bool explicit_defaults
         set_attr/*<bool>*/( layer_node, "cache-features", lyr.cache_features() );
     }
 
+    if ( lyr.rasterized_symbols_cache_enabled() || explicit_defaults )
+    {
+        set_attr/*<bool>*/( layer_node, "rasterized_symbols_cache_enabled", lyr.rasterized_symbols_cache_enabled() );
+    }
+
     if ( lyr.group_by() != "" || explicit_defaults )
     {
         set_attr( layer_node, "group-by", lyr.group_by() );

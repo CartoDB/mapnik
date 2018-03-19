@@ -694,6 +694,13 @@ void map_parser::parse_layer(Map & map, xml_node const& node)
             lyr.set_cache_features(* cache_features);
         }
 
+        optional<mapnik::boolean_type> rasterized_symbols_cache_enabled =
+            node.get_opt_attr<mapnik::boolean_type>("rasterized_symbols_cache_enabled");
+        if (rasterized_symbols_cache_enabled)
+        {
+            lyr.set_rasterized_symbols_cache_enabled(* rasterized_symbols_cache_enabled);
+        }
+
         optional<std::string> group_by =
             node.get_opt_attr<std::string>("group-by");
         if (group_by)

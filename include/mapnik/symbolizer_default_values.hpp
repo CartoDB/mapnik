@@ -341,6 +341,13 @@ struct symbolizer_default<direction_enum, keys::direction>
     static direction_enum value() { return DIRECTION_RIGHT; }
 };
 
+// rasterized_symbols_cache_enabled
+template <>
+struct symbolizer_default<value_bool, keys::rasterized_symbols_cache_enabled>
+{
+    static value_bool value() { return true; }
+};
+
 // placement
 
 // colorizer

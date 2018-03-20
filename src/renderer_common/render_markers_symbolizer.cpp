@@ -87,6 +87,7 @@ struct render_marker_symbolizer_visitor
         double offset = get<value_double, keys::offset>(sym_, feature_, vars);
         double simplify_tolerance = get<value_double, keys::simplify_tolerance>(sym_, feature_, vars);
         double smooth = get<value_double, keys::smooth>(sym_, feature_, vars);
+        bool rasterized_symbols_cache_enabled = get<value_bool, keys::rasterized_symbols_cache_enabled>(sym_, feature_, vars);
 
         if (clip)
         {

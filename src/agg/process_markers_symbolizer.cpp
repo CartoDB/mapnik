@@ -81,7 +81,7 @@ struct agg_markers_renderer_context : markers_renderer_context
     {
         // We try to reuse existing marker images.
         // We currently do it only for single attribute set.
-        if (attrs.size() == 1)
+        if (params.rasterized_symbols_cache_enabled && attrs.size() == 1)
         {
             // Markers are generally drawn using 2 shapes. To be safe, check
             // that at most one of the shapes has transparency.

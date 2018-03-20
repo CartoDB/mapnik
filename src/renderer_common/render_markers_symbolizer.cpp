@@ -87,7 +87,6 @@ struct render_marker_symbolizer_visitor
         double offset = get<value_double, keys::offset>(sym_, feature_, vars);
         double simplify_tolerance = get<value_double, keys::simplify_tolerance>(sym_, feature_, vars);
         double smooth = get<value_double, keys::smooth>(sym_, feature_, vars);
-        bool rasterized_symbols_cache_enabled = get<value_bool, keys::rasterized_symbols_cache_enabled>(sym_, feature_, vars);
 
         if (clip)
         {
@@ -318,6 +317,7 @@ markers_dispatch_params::markers_dispatch_params(box2d<double> const& size,
     , snap_to_pixels(snap)
     , scale_factor(scale)
     , opacity(get<value_double, keys::opacity>(sym, feature, vars))
+    , rasterized_symbols_cache_enabled(get<value_bool, keys::rasterized_symbols_cache_enabled>(sym, feature, vars))
 {
     placement_params.spacing *= scale;
 }

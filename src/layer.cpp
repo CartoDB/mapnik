@@ -40,7 +40,6 @@ layer::layer(std::string const& name, std::string const& srs)
       queryable_(false),
       clear_label_cache_(false),
       cache_features_(false),
-      rasterized_symbols_cache_enabled_(true),
       group_by_(),
       styles_(),
       ds_(),
@@ -56,7 +55,6 @@ layer::layer(layer const& rhs)
       queryable_(rhs.queryable_),
       clear_label_cache_(rhs.clear_label_cache_),
       cache_features_(rhs.cache_features_),
-      rasterized_symbols_cache_enabled_(rhs.rasterized_symbols_cache_enabled_),
       group_by_(rhs.group_by_),
       styles_(rhs.styles_),
       ds_(rhs.ds_),
@@ -72,7 +70,6 @@ layer::layer(layer && rhs)
       queryable_(std::move(rhs.queryable_)),
       clear_label_cache_(std::move(rhs.clear_label_cache_)),
       cache_features_(std::move(rhs.cache_features_)),
-      rasterized_symbols_cache_enabled_(std::move(rhs.rasterized_symbols_cache_enabled_)),
       group_by_(std::move(rhs.group_by_)),
       styles_(std::move(rhs.styles_)),
       ds_(std::move(rhs.ds_)),
@@ -90,7 +87,6 @@ layer& layer::operator=(layer rhs)
     std::swap(this->queryable_, rhs.queryable_);
     std::swap(this->clear_label_cache_, rhs.clear_label_cache_);
     std::swap(this->cache_features_, rhs.cache_features_);
-    std::swap(this->rasterized_symbols_cache_enabled_, rhs.rasterized_symbols_cache_enabled_);
     std::swap(this->group_by_, rhs.group_by_);
     std::swap(this->styles_, rhs.styles_);
     std::swap(this->ds_, rhs.ds_);
@@ -109,7 +105,6 @@ bool layer::operator==(layer const& rhs) const
         (queryable_ == rhs.queryable_) &&
         (clear_label_cache_ == rhs.clear_label_cache_) &&
         (cache_features_ == rhs.cache_features_) &&
-        (rasterized_symbols_cache_enabled_ == rhs.rasterized_symbols_cache_enabled_) &&
         (group_by_ == rhs.group_by_) &&
         (styles_ == rhs.styles_) &&
         ((ds_ && rhs.ds_) ? *ds_ == *rhs.ds_ : ds_ == rhs.ds_) &&
@@ -263,16 +258,6 @@ void layer::set_cache_features(bool cache_features)
 bool layer::cache_features() const
 {
     return cache_features_;
-}
-
-void layer::set_rasterized_symbols_cache_enabled(bool is_enabled)
-{
-    rasterized_symbols_cache_enabled_ = is_enabled;
-}
-
-bool layer::rasterized_symbols_cache_enabled() const
-{
-    return rasterized_symbols_cache_enabled_;
 }
 
 void layer::set_group_by(std::string const& column)

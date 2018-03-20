@@ -345,7 +345,7 @@ struct symbolizer_default<direction_enum, keys::direction>
 template <>
 struct symbolizer_default<value_bool, keys::rasterized_symbols_cache_enabled>
 {
-    static value_bool value() { return true; }
+    static value_bool value() { return false; }
 };
 
 // placement

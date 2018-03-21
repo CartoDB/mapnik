@@ -40,7 +40,7 @@ struct markers_dispatch_params
     bool snap_to_pixels;
     double scale_factor;
     value_double opacity;
-    bool rasterized_symbols_cache_enabled;
+    bool rasterized_symbols_cache_disabled;
 
     markers_dispatch_params(box2d<double> const& size,
                             agg::trans_affine const& tr,

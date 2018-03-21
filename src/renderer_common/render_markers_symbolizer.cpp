@@ -317,7 +317,7 @@ markers_dispatch_params::markers_dispatch_params(box2d<double> const& size,
     , snap_to_pixels(snap)
     , scale_factor(scale)
     , opacity(get<value_double, keys::opacity>(sym, feature, vars))
-    , rasterized_symbols_cache_enabled(get<value_bool, keys::rasterized_symbols_cache_enabled>(sym, feature, vars))
+    , rasterized_symbols_cache_disabled(get<value_bool, keys::rasterized_symbols_cache_disabled>(sym, feature, vars))
 {
     placement_params.spacing *= scale;
 }

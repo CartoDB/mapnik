@@ -341,9 +341,9 @@ struct symbolizer_default<direction_enum, keys::direction>
     static direction_enum value() { return DIRECTION_RIGHT; }
 };
 
-// rasterized_symbols_cache_enabled
+// rasterized_symbols_cache_disabled
 template <>
-struct symbolizer_default<value_bool, keys::rasterized_symbols_cache_enabled>
+struct symbolizer_default<value_bool, keys::rasterized_symbols_cache_disabled>
 {
     static value_bool value() { return false; }
 };

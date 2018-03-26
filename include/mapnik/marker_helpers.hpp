@@ -65,9 +65,11 @@ struct vector_markers_dispatch : util::noncopyable
                             feature_impl const& feature,
                             attributes const& vars,
                             bool snap_to_pixels,
+                            bool rasterized_symbols_cache_disabled,
                             markers_renderer_context & renderer_context)
         : params_(src->bounding_box(), recenter(src) * marker_trans,
-                  sym, feature, vars, scale_factor, snap_to_pixels)
+                  sym, feature, vars, scale_factor, snap_to_pixels,
+                  rasterized_symbols_cache_disabled)
         , renderer_context_(renderer_context)
         , src_(src)
         , path_(path)

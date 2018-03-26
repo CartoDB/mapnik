@@ -48,7 +48,8 @@ struct markers_dispatch_params
                             feature_impl const& feature,
                             attributes const& vars,
                             double scale_factor = 1.0,
-                            bool snap_to_pixels = false);
+                            bool snap_to_pixels = false,
+                            bool rasterized_symbols_cache_disabled = false);
 };
 
 struct markers_renderer_context : util::noncopyable

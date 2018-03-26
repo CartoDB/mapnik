@@ -124,7 +124,6 @@ struct render_marker_symbolizer_visitor
 
         // https://github.com/mapnik/mapnik/issues/1316
         bool snap_to_pixels = !mapnik::marker_cache::instance().is_uri(filename_);
-        bool rasterized_symbols_cache_disabled;
 
         agg::trans_affine image_tr = agg::trans_affine_scaling(common_.scale_factor_);
 
@@ -223,7 +222,6 @@ struct render_marker_symbolizer_visitor
                                                  feature_,
                                                  common_.vars_,
                                                  snap_to_pixels,
-                                                 rasterized_symbols_cache_disabled,
                                                  renderer_context_);
 
         render_marker(mark, rasterizer_dispatch);
@@ -305,8 +303,7 @@ markers_dispatch_params::markers_dispatch_params(box2d<double> const& size,
                                                  feature_impl const& feature,
                                                  attributes const& vars,
                                                  double scale,
-                                                 bool snap,
-                                                 bool rasterized_symbols_cache_disabled)
+                                                 bool snap)
     : placement_params{
         size,
         tr,
@@ -320,7 +317,6 @@ markers_dispatch_params::markers_dispatch_params(box2d<double> const& size,
     , snap_to_pixels(snap)
     , scale_factor(scale)
     , opacity(get<value_double, keys::opacity>(sym, feature, vars))
-    , rasterized_symbols_cache_disabled(rasterized_symbols_cache_disabled)
 {
     placement_params.spacing *= scale;
 }

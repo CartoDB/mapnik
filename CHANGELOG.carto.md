@@ -5,7 +5,8 @@
 **Release date**: 2018-XX-XX
 
 Changes:
- - Metrics: Compatibily fix for older compilers (80ecf2741 by @dprophet).
+ - Metrics: Compatibily fix for older compilers (80ecf2741 by @dprophet)
+ - Fix build issue with MAPNIK_THREADSAFE disabled 
 
 ## 3.0.15.6
 

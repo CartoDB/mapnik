@@ -189,13 +189,8 @@ void agg_renderer<T0,T1>::setup(Map const &m)
         util::apply_visitor(visitor, *bg_marker);
     }
 
-    mapnik::parameters const & params = m.get_extra_parameters();
-    auto rasterized_symbols_cache_disabled = params.get<bool>("rasterized_symbols_cache_disabled");
-    if (rasterized_symbols_cache_disabled == true) {
-        rasterized_symbols_cache_disabled_ = true;
-    } else {
-        rasterized_symbols_cache_disabled_ = false;
-    }
+    auto const & params = m.get_extra_parameters();
+    rasterized_symbols_cache_disabled_ = (params.get<bool>("rasterized_symbols_cache_disabled") == true);
 
     MAPNIK_LOG_DEBUG(agg_renderer) << "agg_renderer: Scale=" << m.scale();
 }

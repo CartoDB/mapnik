@@ -55,6 +55,7 @@ void grid_renderer<T>::process(line_pattern_symbolizer const& sym,
                                mapnik::feature_impl & feature,
                                proj_transform const& prj_trans)
 {
+    METRIC_UNUSED auto t = this->metrics_.measure_time("Grid_PLinePatternS");
     std::string filename = get<std::string, keys::file>(sym, feature, common_.vars_);
     if (filename.empty()) return;
     std::shared_ptr<mapnik::marker const> mark = marker_cache::instance().find(filename, true);

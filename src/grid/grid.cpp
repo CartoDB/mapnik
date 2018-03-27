@@ -55,7 +55,8 @@ hit_grid<T>::hit_grid(std::size_t width, std::size_t height, std::string const& 
 
 template <typename T>
 hit_grid<T>::hit_grid(hit_grid<T> const& rhs)
-    : width_(rhs.width_),
+    : metrics_(rhs.metrics_),
+      width_(rhs.width_),
       height_(rhs.height_),
       key_(rhs.key_),
       data_(rhs.data_),
@@ -65,7 +66,6 @@ hit_grid<T>::hit_grid(hit_grid<T> const& rhs)
       f_keys_(rhs.f_keys_),
       features_(rhs.features_),
       ctx_(rhs.ctx_)
-     ,metrics_(rhs.metrics_)
 {
     f_keys_[base_mask] = "";
     data_.set(base_mask);

@@ -33,7 +33,6 @@ TEST_CASE("metrics")
     {
         metrics m(false);
         CHECK(m.enabled_ == false);
-        CHECK(m.prefix_ == "");
         CHECK(m.to_string() == "{}");
         m.enabled_ = true;
         m.measure_add("test");
@@ -44,14 +43,6 @@ TEST_CASE("metrics")
         CHECK(m.to_string() == m2.to_string());
         m2.measure_add("other test", 100, measurement_t::TIME_MICROSECONDS);
         CHECK(m.to_string() == m2.to_string());
-
-        metrics m3(m, "prefix.");
-        CHECK(m.to_string() == m3.to_string());
-        m3.measure_add("test3", 50);
-        CHECK(m.to_string() == m3.to_string());
-
-        metrics m4(m3, "second.");
-        CHECK(m4.prefix_ == "prefix.second.");
     }
 
     SECTION("Find")
@@ -62,15 +53,7 @@ TEST_CASE("metrics")
 
         CHECK(m.find("exists"));
         CHECK(!m.find("doesn't exists"));
-
         CHECK(m.find("prefix.sub"));
-        CHECK(!m.find("sub"));
-        m.prefix_ = "prefix.";
-        CHECK(!m.find("prefix.sub"));
-        CHECK(m.find("sub"));
-
-        CHECK(m.find("prefix.sub", true));
-        CHECK(!m.find("sub", true));
     }
 
 
@@ -132,7 +115,6 @@ TEST_CASE("metrics")
     SECTION("Copy and move")
     {
         metrics m(true);
-        m.prefix_ = "m1.";
         m.measure_add("measurement", 100, measurement_t::TIME_MICROSECONDS);
 
         metrics m2 = m;
@@ -150,72 +132,31 @@ TEST_CASE("metrics")
         CHECK(m4.to_string() == m3.to_string());
     }
 
-    SECTION("Metrics hierarchy")
-    {
-        metrics m(true);
-        m.measure_add("metric.test.first", 10);
-
-        auto it = m.find("metric");
-        REQUIRE(it);
-        CHECK(it->value_ == 0);
-        CHECK(it->type_ == measurement_t::UNASSIGNED);
-
-        it = m.find("metric.test");
-        REQUIRE(it);
-        CHECK(it->value_ == 0);
-        CHECK(it->type_ == measurement_t::UNASSIGNED);
-
-        it = m.find("metric.not_found");
-        CHECK(!it);
-
-        it = m.find("metric.test.first");
-        REQUIRE(it);
-        CHECK(it->value_ == 10);
-        CHECK(it->type_ == measurement_t::VALUE);
-        CHECK(it->calls_ == 1);
-
-        m.measure_add("metric.test", 100);
-        it = m.find("metric.test");
-        REQUIRE(it);
-        CHECK(it->value_ == 100);
-        CHECK(it->type_ == measurement_t::VALUE);
-        CHECK(it->calls_ == 1);
-
-        metrics sub(m, "metric.test.");
-        sub.measure_add("first", 50);
-        sub.measure_add("second", 100, measurement_t::TIME_MICROSECONDS);
-        CHECK(m.find("metric.test.first")->value_ == 60); //10 + 50
-        it = m.find("metric.test.second");
-        REQUIRE(it);
-        CHECK(it->value_ == 100);
-        CHECK(it->type_ == measurement_t::TIME_MICROSECONDS);
-    }
-
     SECTION("to_string")
     {
         metrics m(true);
         CHECK(m.to_string() == "{}");
         m.measure_add("new_metric", 10);
-        CHECK(m.to_string() == R"^({"new_metric":10})^");
+        CHECK(m.to_string() == R"^({"Mapnik":{"new_metric":10}})^");
         m.measure_add("new_metric", 15);
-        CHECK(m.to_string() == R"^({"new_metric":25})^");
+        CHECK(m.to_string() == R"^({"Mapnik":{"new_metric":25}})^");
 
         metrics m2(true);
         m2.measure_add("metric.render.vortex", 10);
-        CHECK(m2.to_string() == R"^({"metric":{"render":{"vortex":10}}})^");
+        CHECK(m2.to_string() == R"^({"Mapnik":{"metric.render.vortex":10}})^");
 
         m2.measure_add("metric.render", 100);
-        CHECK(m2.to_string() == R"^({"metric":{"render":{"Value":100,"vortex":10}}})^");
+        CHECK(m2.to_string() == R"^({"Mapnik":{"metric.render.vortex":10,"metric.render":100}})^");
 
         metrics m3(true);
         m3.measure_add("metric.a", 10);
         m3.measure_add("metric.b", 20);
-        CHECK(m3.to_string() == R"^({"metric":{"a":10,"b":20}})^");
+        CHECK(m3.to_string() == R"^({"Mapnik":{"metric.a":10,"metric.b":20}})^");
 
         metrics m4(true);
         m4.measure_add("time metric", 100, measurement_t::TIME_MICROSECONDS);
         m4.measure_add("time metric", 150, measurement_t::TIME_MICROSECONDS);
-        CHECK(m4.to_string() == R"^({"time metric":{"Time (us)":250,"Calls":2}})^");
+        CHECK(m4.to_string() == R"^({"Mapnik":{"time metric":{"Time (us)":250,"Calls":2}}})^");
     }
 
 } //Test case

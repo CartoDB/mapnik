@@ -38,6 +38,7 @@ enum geometry_types : std::uint8_t
     MultiLineString = 5,
     MultiPolygon = 6,
     GeometryCollection = 7,
+    TOTAL_SIZE
 };
 
 }}

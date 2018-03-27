@@ -213,7 +213,7 @@ void agg_renderer<T0,T1>::process(debug_symbolizer const& sym,
                               mapnik::feature_impl & feature,
                               proj_transform const& prj_trans)
 {
-
+    METRIC_UNUSED auto t = agg_renderer::metrics_.measure_time("Agg_PDebugS");
     debug_symbolizer_mode_enum mode = get<debug_symbolizer_mode_enum>(sym, keys::mode, feature, common_.vars_, DEBUG_SYM_MODE_COLLISION);
 
     ras_ptr->reset();

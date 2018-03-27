@@ -5,7 +5,12 @@
 **Release date**: 2018-XX-XX
 
 Changes:
- - Metrics: Compatibily fix for older compilers (80ecf2741 by @dprophet).
+ - Metrics: Add metrics in the grid renderer
+ - Metrics: Compatibily fix for older compilers (80ecf2741 by @dprophet)
+ - Fix build issue with MAPNIK_THREADSAFE disabled
+ - Metrics: Internal rework (no mutex, no tree) to improve performance
+ - Metrics: Add metrics for feature types
+ - Metrics: Add metrics to the agg renderer
 
 ## 3.0.15.6
 

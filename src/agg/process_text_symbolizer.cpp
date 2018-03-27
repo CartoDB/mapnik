@@ -37,6 +37,7 @@ void agg_renderer<T0,T1>::process(text_symbolizer const& sym,
                                   mapnik::feature_impl & feature,
                                   proj_transform const& prj_trans)
 {
+    METRIC_UNUSED auto t = agg_renderer::metrics_.measure_time("Agg_PTextS");
 
     box2d<double> clip_box = clipping_extent(common_);
     agg::trans_affine tr;

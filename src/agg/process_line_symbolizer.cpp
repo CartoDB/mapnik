@@ -95,6 +95,7 @@ void agg_renderer<T0,T1>::process(line_symbolizer const& sym,
                               proj_transform const& prj_trans)
 
 {
+    METRIC_UNUSED auto t = agg_renderer::metrics_.measure_time("Agg_PLineS");
     color const& col = get<color, keys::stroke>(sym, feature, common_.vars_);
     unsigned r=col.red();
     unsigned g=col.green();

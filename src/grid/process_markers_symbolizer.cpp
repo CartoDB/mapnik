@@ -138,12 +138,12 @@ void grid_renderer<T>::process(markers_symbolizer const& sym,
                                mapnik::feature_impl & feature,
                                proj_transform const& prj_trans)
 {
+    METRIC_UNUSED auto t = this->metrics_.measure_time("Grid_PMarkerS");
     using buf_type = grid_rendering_buffer;
     using pixfmt_type = typename grid_renderer_base_type::pixfmt_type;
     using renderer_type = agg::renderer_scanline_bin_solid<grid_renderer_base_type>;
 
     using namespace mapnik::svg;
-    using svg_attribute_type = agg::pod_bvector<path_attributes>;
     using svg_renderer_type = svg_renderer_agg<svg_path_adapter,
                                                svg_attribute_type,
                                                renderer_type,

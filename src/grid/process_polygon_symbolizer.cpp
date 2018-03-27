@@ -52,6 +52,7 @@ void grid_renderer<T>::process(polygon_symbolizer const& sym,
                                mapnik::feature_impl & feature,
                                proj_transform const& prj_trans)
 {
+    METRIC_UNUSED auto t = this->metrics_.measure_time("Grid_PPolygonS");
     using renderer_type = agg::renderer_scanline_bin_solid<grid_renderer_base_type>;
     using pixfmt_type = typename grid_renderer_base_type::pixfmt_type;
     using color_type = typename grid_renderer_base_type::pixfmt_type::color_type;

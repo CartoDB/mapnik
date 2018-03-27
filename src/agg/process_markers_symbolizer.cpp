@@ -63,8 +63,10 @@ struct agg_markers_renderer_context : markers_renderer_context
                                  feature_impl const& feature,
                                  attributes const& vars,
                                  BufferType & buf,
-                                 RasterizerType & ras)
-      : buf_(buf),
+                                 RasterizerType & ras,
+                                 metrics & m)
+      : markers_renderer_context(m),
+        buf_(buf),
         pixf_(buf_),
         renb_(pixf_),
         ras_(ras),
@@ -128,6 +130,7 @@ struct agg_markers_renderer_context : markers_renderer_context
 
                 if (!cache_hit)
                 {
+                    metrics_.measure_add("Agg_PMS_ImageCache_Miss");
                     // Calculate canvas size
                     int width  = static_cast<int>(std::ceil(src->bounding_box().width()  + 2.0 * margin)) + 2;
                     int height = static_cast<int>(std::ceil(src->bounding_box().height() + 2.0 * margin)) + 2;
@@ -217,6 +220,7 @@ struct agg_markers_renderer_context : markers_renderer_context
             }
         }
 
+        metrics_.measure_add("Agg_PMS_ImageCache_Ignored");
         // Fallback to non-cached rendering path
         SvgRenderer svg_renderer(path, attrs);
         render_vector_marker(svg_renderer, ras_, renb_, src->bounding_box(), marker_tr, params.opacity, params.snap_to_pixels);
@@ -303,8 +307,7 @@ void agg_renderer<T0,T1>::process(markers_symbolizer const& sym,
     using context_type = detail::agg_markers_renderer_context<svg_renderer_type,
                                                               buf_type,
                                                               rasterizer>;
-    context_type renderer_context(sym, feature, common_.vars_, render_buffer, *ras_ptr);
-
+    context_type renderer_context(sym, feature, common_.vars_, render_buffer, *ras_ptr, agg_renderer::metrics_);
     render_markers_symbolizer(
         sym, feature, prj_trans, common_, clip_box, renderer_context);
 }

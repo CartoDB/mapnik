@@ -78,8 +78,10 @@ struct grid_markers_renderer_context : markers_renderer_context
     grid_markers_renderer_context(feature_impl const& feature,
                                   BufferType & buf,
                                   RasterizerType & ras,
-                                  PixMapType & pixmap)
-      : feature_(feature),
+                                  PixMapType & pixmap,
+                                  metrics & m)
+      : markers_renderer_context(m),
+        feature_(feature),
         buf_(buf),
         pixf_(buf_),
         renb_(pixf_),
@@ -158,7 +160,7 @@ void grid_renderer<T>::process(markers_symbolizer const& sym,
                                                                buf_type,
                                                                grid_rasterizer,
                                                                buffer_type>;
-    context_type renderer_context(feature, render_buf, *ras_ptr, pixmap_);
+    context_type renderer_context(feature, render_buf, *ras_ptr, pixmap_, this->metrics_);
 
     render_markers_symbolizer(
         sym, feature, prj_trans, common_, clip_box, renderer_context);

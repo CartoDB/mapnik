@@ -153,6 +153,7 @@ struct render_marker_symbolizer_visitor
 
         if (!r_attributes)
         {
+            renderer_context_.metrics_.measure_add("Agg_PMS_AttrCache_Miss");
             svg_attribute_type s_attributes;
             r_attributes = std::make_shared<svg_attribute_type>(get_marker_attributes(*stock_vector_marker, s_attributes));
 
@@ -209,6 +210,7 @@ struct render_marker_symbolizer_visitor
 
             if (!marker_ptr)
             {
+                renderer_context_.metrics_.measure_add("Agg_PMS_EllipseCache_Miss");
                 marker_ptr = std::make_shared<svg_storage_type>();
                 vertex_stl_adapter<svg_path_storage> stl_storage(marker_ptr->source());
                 svg_path_adapter svg_path(stl_storage);

@@ -6,7 +6,8 @@
 
 Changes:
  - Metrics: Compatibily fix for older compilers (80ecf2741 by @dprophet)
- - Fix build issue with MAPNIK_THREADSAFE disabled 
+ - Fix build issue with MAPNIK_THREADSAFE disabled
+ - Metrics: Internal rework (no mutex, no tree) to improve performance
 
 ## 3.0.15.6
 

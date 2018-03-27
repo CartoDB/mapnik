@@ -130,7 +130,7 @@ struct render_marker_symbolizer_visitor
         boost::optional<svg_path_ptr> const& stock_vector_marker = mark.get_data();
         svg_path_ptr marker_ptr = *stock_vector_marker;
 
-        std::shared_ptr<svg_attribute_type> r_attributes;
+        std::shared_ptr<svg_attribute_type> r_attributes = nullptr;
 
         // Look up the feature/symbolizer attributes from the cache.
         // We are using raw symbolizer pointer as a cache key. As this
@@ -139,6 +139,7 @@ struct render_marker_symbolizer_visitor
         markers_symbolizer const* attr_key = &sym_;
 
         // Limit the scope of the metrics mutex
+        if (!renderer_context_.symbolizer_caches_disabled_)
         {
 #ifdef MAPNIK_THREADSAFE
             std::lock_guard<std::mutex> lock(mutex_);
@@ -158,7 +159,7 @@ struct render_marker_symbolizer_visitor
 
             // We can only cache the attributes using the given key if no expressions are used in properties.
             // Otherwise the expressions may refer to feature-specific values.
-            bool cacheable = std::all_of(
+            bool cacheable = !renderer_context_.symbolizer_caches_disabled_ && std::all_of(
                 sym_.properties.begin(), sym_.properties.end(),
                 [](symbolizer_base::cont_type::value_type const& key_prop) { return !is_expression(key_prop.second); }
             );

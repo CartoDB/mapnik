@@ -107,22 +107,26 @@ struct agg_markers_renderer_context : markers_renderer_context
                 double sample_y = std::floor(dy * sampling_rate);
 
                 int sample_idx = static_cast<int>(sample_y) * sampling_rate + static_cast<int>(sample_x);
-
                 std::tuple<svg_path_ptr, int, svg::path_attributes> key(src, sample_idx, attrs[0]);
 
-#ifdef MAPNIK_THREADSAFE
-                std::lock_guard<std::mutex> lock(mutex_);
-#endif
-                std::shared_ptr<image_rgba8> fill_img;
-                std::shared_ptr<image_rgba8> stroke_img;
-
-                auto it = cached_images_.find(key);
-                if (it != cached_images_.end())
+                std::shared_ptr<image_rgba8> fill_img = nullptr;
+                std::shared_ptr<image_rgba8> stroke_img = nullptr;
+                bool cache_hit = false;
+                // Limit the scope of the cache mutex
                 {
-                    fill_img = it->second.first;
-                    stroke_img = it->second.second;
+#ifdef MAPNIK_THREADSAFE
+                    std::lock_guard<std::mutex> lock(mutex_);
+#endif
+                    auto it = cached_images_.find(key);
+                    if (it != cached_images_.end())
+                    {
+                        cache_hit = true;
+                        fill_img = it->second.first;
+                        stroke_img = it->second.second;
+                    }
                 }
-                else
+
+                if (!cache_hit)
                 {
                     // Calculate canvas size
                     int width  = static_cast<int>(std::ceil(src->bounding_box().width()  + 2.0 * margin)) + 2;
@@ -180,11 +184,17 @@ struct agg_markers_renderer_context : markers_renderer_context
                         }
                     }
 
-                    if (cached_images_.size() > cache_size)
+                    // Update cache with the new images
                     {
-                        cached_images_.erase(cached_images_.begin());
+#ifdef MAPNIK_THREADSAFE
+                        std::lock_guard<std::mutex> lock(mutex_);
+#endif
+                        if (cached_images_.size() > cache_size)
+                        {
+                            cached_images_.erase(cached_images_.begin());
+                        }
+                        cached_images_.emplace(key, std::make_pair(fill_img, stroke_img));
                     }
-                    cached_images_.emplace(key, std::make_pair(fill_img, stroke_img));
 
                     // Restore clip box
                     ras_.clip_box(0, 0, pixf_.width(), pixf_.height());

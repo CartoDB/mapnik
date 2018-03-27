@@ -12,6 +12,7 @@ Changes:
  - Metrics: Add metrics for feature types
  - Metrics: Add metrics to the agg renderer
  - Metrics: Add metrics for cache misses
+ - Markers Symbolizer Caches: Add a map extra parameter `markers_symbolizer_caches_disabled` that can be set to true to disable them.
 
 ## 3.0.15.6
 

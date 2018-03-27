@@ -30,6 +30,7 @@
 #include <mapnik/cairo/cairo_render_vector.hpp>
 #include <mapnik/map.hpp>
 #include <mapnik/svg/svg_path_adapter.hpp>
+#include <mapnik/svg/svg_path_attributes.hpp>
 #include <mapnik/pixel_position.hpp>
 #include <mapnik/attribute.hpp>
 #include <mapnik/request.hpp>
@@ -254,7 +255,7 @@ struct cairo_render_marker_visitor
                 marker_tr *= tr_;
             }
             marker_tr *= agg::trans_affine_scaling(common_.scale_factor_);
-            agg::pod_bvector<svg::path_attributes> const & attributes = vmarker->attributes();
+            svg_attribute_ptr attributes = std::make_shared<svg_attribute_type>(vmarker->attributes());
             svg::vertex_stl_adapter<svg::svg_path_storage> stl_storage(vmarker->source());
             svg::svg_path_adapter svg_path(stl_storage);
             marker_tr.translate(pos_.x, pos_.y);

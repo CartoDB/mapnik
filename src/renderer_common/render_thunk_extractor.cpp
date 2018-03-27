@@ -51,7 +51,7 @@ struct thunk_markers_renderer_context : markers_renderer_context
 
     virtual void render_marker(svg_path_ptr const& src,
                                svg_path_adapter & path,
-                               svg_attribute_type const& attrs,
+                               svg_attribute_ptr attrs,
                                markers_dispatch_params const& params,
                                agg::trans_affine const& marker_tr)
     {

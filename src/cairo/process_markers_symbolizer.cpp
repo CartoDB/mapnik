@@ -35,8 +35,8 @@ namespace detail {
 
 struct cairo_markers_renderer_context : markers_renderer_context
 {
-    explicit cairo_markers_renderer_context(cairo_context & ctx)
-      : ctx_(ctx)
+    explicit cairo_markers_renderer_context(cairo_context & ctx, metrics & m)
+      : markers_renderer_context(m), ctx_(ctx)
     {}
 
     virtual void render_marker(svg_path_ptr const& src,
@@ -77,7 +77,7 @@ void cairo_renderer<T>::process(markers_symbolizer const& sym,
     box2d<double> clip_box = common_.query_extent_;
 
     using context_type = detail::cairo_markers_renderer_context;
-    context_type renderer_context(context_);
+    context_type renderer_context(context_, this->metrics_);
 
     render_markers_symbolizer(
         sym, feature, prj_trans, common_, clip_box,

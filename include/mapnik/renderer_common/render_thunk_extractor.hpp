@@ -88,6 +88,7 @@ private:
     proj_transform const& prj_trans_;
     virtual_renderer_common & common_;
     box2d<double> clipping_extent_;
+    metrics metrics_ = metrics(false);
 
     void update_box() const;
 };

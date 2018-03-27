@@ -596,7 +596,10 @@ void feature_style_processor<Processor>::render_style(
     featureset_ptr features,
     proj_transform const& prj_trans)
 {
-    METRIC_UNUSED auto t = metrics_.measure_time(METRICS_NAME_RENDER_STYLE);
+#ifdef MAPNIK_METRICS
+    auto t = metrics_.measure_time(METRICS_NAME_RENDER_STYLE);
+    uint features_count[geometry::geometry_types::TOTAL_SIZE] = {0};
+#endif
     p.start_style_processing(*style);
     if (!features)
     {
@@ -608,6 +611,11 @@ void feature_style_processor<Processor>::render_style(
     bool was_painted = false;
     while ((feature = features->next()))
     {
+#ifdef MAPNIK_METRICS
+        mapnik::geometry::geometry<double> const& geometry = feature->get_geometry();
+        geometry::geometry_types type = geometry::geometry_type(geometry);
+        features_count[type]++;
+#endif
         bool do_else = true;
         bool do_also = false;
         for (rule const* r : rc.get_if_rules() )
@@ -666,6 +674,33 @@ void feature_style_processor<Processor>::render_style(
             }
         }
     }
+
+#ifdef MAPNIK_METRICS
+    if (features_count[geometry::geometry_types::Unknown])
+        metrics_.measure_add("Features_cnt_Unknown",
+                features_count[geometry::geometry_types::Unknown]);
+    if (features_count[geometry::geometry_types::Point])
+        metrics_.measure_add("Features_cnt_Point",
+                features_count[geometry::geometry_types::Point]);
+    if (features_count[geometry::geometry_types::LineString])
+        metrics_.measure_add("Features_cnt_LineString",
+                features_count[geometry::geometry_types::LineString]);
+    if (features_count[geometry::geometry_types::Polygon])
+        metrics_.measure_add("Features_cnt_Polygon",
+                features_count[geometry::geometry_types::Polygon]);
+    if (features_count[geometry::geometry_types::MultiPoint])
+        metrics_.measure_add("Features_cnt_MultiPoint",
+                features_count[geometry::geometry_types::MultiPoint]);
+    if (features_count[geometry::geometry_types::MultiLineString])
+        metrics_.measure_add("Features_cnt_MultiLineString",
+                features_count[geometry::geometry_types::MultiLineString]);
+    if (features_count[geometry::geometry_types::MultiPolygon])
+        metrics_.measure_add("Features_cnt_MultiPolygon",
+                features_count[geometry::geometry_types::MultiPolygon]);
+    if (features_count[geometry::geometry_types::GeometryCollection])
+        metrics_.measure_add("Features_cnt_GeometryCollection",
+                features_count[geometry::geometry_types::GeometryCollection]);
+#endif
 
     p.painted(p.painted() | was_painted);
     p.end_style_processing(*style);

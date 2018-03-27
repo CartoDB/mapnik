@@ -52,8 +52,9 @@ struct markers_dispatch_params
 
 struct markers_renderer_context : util::noncopyable
 {
-    markers_renderer_context(bool symbolizer_caches_disabled = false)
-        : symbolizer_caches_disabled_(symbolizer_caches_disabled)
+    markers_renderer_context(metrics &m, bool symbolizer_caches_disabled = false)
+        : metrics_(m)
+        , symbolizer_caches_disabled_(symbolizer_caches_disabled)
     {}
 
     virtual void render_marker(image_rgba8 const& src,
@@ -66,6 +67,7 @@ struct markers_renderer_context : util::noncopyable
                                markers_dispatch_params const& params,
                                agg::trans_affine const& marker_tr) = 0;
 
+    metrics metrics_;
     bool symbolizer_caches_disabled_;
 };
 

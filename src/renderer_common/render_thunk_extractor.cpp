@@ -42,8 +42,10 @@ struct thunk_markers_renderer_context : markers_renderer_context
     thunk_markers_renderer_context(symbolizer_base const& sym,
                                    feature_impl const& feature,
                                    attributes const& vars,
-                                   render_thunk_list & thunks)
-        : comp_op_(get<composite_mode_e, keys::comp_op>(sym, feature, vars))
+                                   render_thunk_list & thunks,
+                                   metrics & m)
+        : markers_renderer_context(m)
+        , comp_op_(get<composite_mode_e, keys::comp_op>(sym, feature, vars))
         , thunks_(thunks)
     {}
 
@@ -88,7 +90,7 @@ render_thunk_extractor::render_thunk_extractor(box2d<double> & box,
 void render_thunk_extractor::operator()(markers_symbolizer const& sym) const
 {
     using context_type = detail::thunk_markers_renderer_context;
-    context_type renderer_context(sym, feature_, vars_, thunks_);
+    context_type renderer_context(sym, feature_, vars_, thunks_, const_cast<metrics &>(this->metrics_));
 
     render_markers_symbolizer(
             sym, feature_, prj_trans_, common_, clipping_extent_, renderer_context);

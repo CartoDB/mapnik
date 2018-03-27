@@ -255,7 +255,14 @@ struct cairo_render_marker_visitor
                 marker_tr *= tr_;
             }
             marker_tr *= agg::trans_affine_scaling(common_.scale_factor_);
-            svg_attribute_ptr attributes = std::make_shared<svg_attribute_type>(vmarker->attributes());
+
+            //Since the underlying type is a pod_array that creates a copy (memcpy) version
+            //of the attributes, using a copy here would mean that some underlying types
+            //using ref counts (e.g shared_ptr's) would have an extra reference but the
+            //count wouldn't be increased. This would mean that we'd try to free them an
+            //extra time. To avoid this we pass the raw pointer and remove the deleter
+            svg_attribute_ptr attributes(&vmarker->attributes(), [](svg_attribute_type*){});
+
             svg::vertex_stl_adapter<svg::svg_path_storage> stl_storage(vmarker->source());
             svg::svg_path_adapter svg_path(stl_storage);
             marker_tr.translate(pos_.x, pos_.y);

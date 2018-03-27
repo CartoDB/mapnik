@@ -33,16 +33,16 @@ namespace mapnik
 {
 
 void render_vector_marker(cairo_context & context, svg::svg_path_adapter & svg_path,
-                          agg::pod_bvector<svg::path_attributes> const & attributes,
+                          svg_attribute_ptr attributes,
                           box2d<double> const& bbox, agg::trans_affine const& tr,
                           double opacity)
 {
     using namespace mapnik::svg;
     agg::trans_affine transform;
 
-    for(unsigned i = 0; i < attributes.size(); ++i)
+    for(unsigned i = 0; i < attributes->size(); ++i)
     {
-        mapnik::svg::path_attributes const& attr = attributes[i];
+        mapnik::svg::path_attributes const& attr = (*attributes)[i];
         if (!attr.visibility_flag)
             continue;
         cairo_save_restore guard(context);

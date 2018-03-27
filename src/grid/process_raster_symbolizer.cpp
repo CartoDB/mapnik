@@ -35,6 +35,7 @@ void grid_renderer<T>::process(raster_symbolizer const&,
                                mapnik::feature_impl &,
                                proj_transform const&)
 {
+    METRIC_UNUSED auto t = this->metrics_.measure_time("Grid_PRasterS");
     MAPNIK_LOG_WARN(grid_renderer) << "grid_renderer: raster_symbolizer is not yet supported";
 }
 

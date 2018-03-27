@@ -150,6 +150,7 @@ void  grid_renderer<T>::process(group_symbolizer const& sym,
                                 mapnik::feature_impl & feature,
                                 proj_transform const& prj_trans)
 {
+    METRIC_UNUSED auto t = this->metrics_.measure_time("Grid_PGroupS");
     thunk_renderer<T> ren(*this, *ras_ptr, pixmap_, common_, feature);
 
     render_group_symbolizer(

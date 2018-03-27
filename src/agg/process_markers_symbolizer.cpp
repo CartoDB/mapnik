@@ -64,13 +64,13 @@ struct agg_markers_renderer_context : markers_renderer_context
                                  attributes const& vars,
                                  BufferType & buf,
                                  RasterizerType & ras,
-                                 bool markers_symbolizer_caches_disabled)
-      : buf_(buf),
+                                 bool symbolizer_caches_disabled)
+        : markers_renderer_context(symbolizer_caches_disabled),
+        buf_(buf),
         pixf_(buf_),
         renb_(pixf_),
         ras_(ras),
-        comp_op_(get<composite_mode_e, keys::comp_op>(sym, feature, vars)),
-        markers_symbolizer_caches_disabled_(markers_symbolizer_caches_disabled)
+        comp_op_(get<composite_mode_e, keys::comp_op>(sym, feature, vars))
     {
         pixf_.comp_op(static_cast<agg::comp_op_e>(comp_op_));
     }
@@ -83,7 +83,7 @@ struct agg_markers_renderer_context : markers_renderer_context
     {
         // We try to reuse existing marker images.
         // We currently do it only for single attribute set.
-        if (!markers_symbolizer_caches_disabled_ && attrs.size() == 1)
+        if (!symbolizer_caches_disabled_ && attrs.size() == 1)
         {
             // Markers are generally drawn using 2 shapes. To be safe, check
             // that at most one of the shapes has transparency.
@@ -232,7 +232,6 @@ private:
     renderer_base renb_;
     RasterizerType & ras_;
     composite_mode_e comp_op_;
-    bool markers_symbolizer_caches_disabled_;
 
 #ifdef MAPNIK_THREADSAFE
     static std::mutex mutex_;

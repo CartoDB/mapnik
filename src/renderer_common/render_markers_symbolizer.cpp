@@ -128,7 +128,7 @@ struct render_marker_symbolizer_visitor
         agg::trans_affine image_tr = agg::trans_affine_scaling(common_.scale_factor_);
 
         boost::optional<svg_path_ptr> const& stock_vector_marker = mark.get_data();
-        svg_path_ptr marker_ptr = *stock_vector_marker;
+        svg_path_ptr marker_ptr = nullptr;
 
         std::shared_ptr<svg_attribute_type> r_attributes = nullptr;
 
@@ -188,16 +188,13 @@ struct render_marker_symbolizer_visitor
             // to allow for full control over rx/ry dimensions
             // Ellipses are built procedurally. We do caching of the built ellipses, this is useful for rendering stages
             std::tuple<double, double, double> marker_key;
+            if ( !renderer_context_.symbolizer_caches_disabled_ )
             {
                 marker_key = std::tuple<double, double, double>(
                     get<double>(sym_, keys::width, feature_, common_.vars_, -std::numeric_limits<double>::infinity()),
                     get<double>(sym_, keys::height, feature_, common_.vars_, -std::numeric_limits<double>::infinity()),
                     get<double>(sym_, keys::stroke_width, feature_, common_.vars_, -std::numeric_limits<double>::infinity())
                 );
-            }
-
-            {
-                marker_ptr = nullptr;
 #ifdef MAPNIK_THREADSAFE
                 std::lock_guard<std::mutex> lock(mutex_);
 #endif
@@ -215,15 +212,17 @@ struct render_marker_symbolizer_visitor
                 svg_path_adapter svg_path(stl_storage);
                 build_ellipse(sym_, feature_, common_.vars_, *marker_ptr, svg_path);
 
-#ifdef MAPNIK_THREADSAFE
-                std::lock_guard<std::mutex> lock(mutex_);
-#endif
-                if (cached_ellipses_.size() > ellipses_cache_size)
+                if ( !renderer_context_.symbolizer_caches_disabled_ )
                 {
-                    cached_ellipses_.erase(cached_ellipses_.begin());
+#ifdef MAPNIK_THREADSAFE
+                    std::lock_guard<std::mutex> lock(mutex_);
+#endif
+                    if (cached_ellipses_.size() > ellipses_cache_size)
+                    {
+                        cached_ellipses_.erase(cached_ellipses_.begin());
+                    }
+                    cached_ellipses_.emplace(marker_key, marker_ptr);
                 }
-                cached_ellipses_.emplace(marker_key, marker_ptr);
-
             }
         }
 

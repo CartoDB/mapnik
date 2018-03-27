@@ -262,6 +262,7 @@ void agg_renderer<T0,T1>::process(markers_symbolizer const& sym,
                               feature_impl & feature,
                               proj_transform const& prj_trans)
 {
+    METRIC_UNUSED auto t = agg_renderer::metrics_.measure_time("Agg_PMarkerS");
     using namespace mapnik::svg;
     using color_type = agg::rgba8;
     using order_type = agg::order_rgba;

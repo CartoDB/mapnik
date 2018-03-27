@@ -146,6 +146,7 @@ void agg_renderer<T0,T1>::process(group_symbolizer const& sym,
                                   mapnik::feature_impl & feature,
                                   proj_transform const& prj_trans)
 {
+    METRIC_UNUSED auto t = agg_renderer::metrics_.measure_time("Agg_PGroupS");
     thunk_renderer<buffer_type> ren(*this, ras_ptr, current_buffer_, common_);
 
     render_group_symbolizer(

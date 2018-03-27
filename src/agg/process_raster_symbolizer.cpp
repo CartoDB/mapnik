@@ -51,6 +51,7 @@ void agg_renderer<T0,T1>::process(raster_symbolizer const& sym,
                               mapnik::feature_impl & feature,
                               proj_transform const& prj_trans)
 {
+    METRIC_UNUSED auto t = agg_renderer::metrics_.measure_time("Agg_PRasterS");
     render_raster_symbolizer(
         sym, feature, prj_trans, common_,
         [&](image_rgba8 const & target, composite_mode_e comp_op, double opacity,

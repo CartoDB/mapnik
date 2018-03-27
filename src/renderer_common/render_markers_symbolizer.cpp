@@ -138,12 +138,20 @@ struct render_marker_symbolizer_visitor
         // and compare the actual value of properties in case of hit.
         markers_symbolizer const* attr_key = &sym_;
 
+        // Limit the scope of the metrics mutex
+        {
 #ifdef MAPNIK_THREADSAFE
-        std::lock_guard<std::mutex> lock(mutex_);
+            std::lock_guard<std::mutex> lock(mutex_);
 #endif
+            auto attr_it = cached_attributes_.find(attr_key);
+            if (attr_it != cached_attributes_.end() &&
+                attr_it->second.second == sym_.properties)
+            {
+                r_attributes = attr_it->second.first;
+            }
+        }
 
-        auto attr_it = cached_attributes_.find(attr_key);
-        if (attr_it == cached_attributes_.end() || attr_it->second.second != sym_.properties)
+        if (!r_attributes)
         {
             svg_attribute_type s_attributes;
             r_attributes = std::make_shared<svg_attribute_type>(get_marker_attributes(*stock_vector_marker, s_attributes));
@@ -156,6 +164,9 @@ struct render_marker_symbolizer_visitor
             );
             if (cacheable)
             {
+#ifdef MAPNIK_THREADSAFE
+                std::lock_guard<std::mutex> lock(mutex_);
+#endif
                 if (cached_attributes_.size() > attributes_cache_size)
                 {
                     cached_attributes_.erase(cached_attributes_.begin());
@@ -163,45 +174,56 @@ struct render_marker_symbolizer_visitor
                 cached_attributes_[attr_key] = std::make_pair(r_attributes, sym_.properties);
             }
         }
+
+        if (filename_ != "shape://ellipse" ||
+            !((has_key(sym_,keys::width) || has_key(sym_,keys::height))))
+        {
+            box2d<double> const& bbox = mark.bounding_box();
+            setup_transform_scaling(image_tr, bbox.width(), bbox.height(), feature_, common_.vars_, sym_);
+        }
         else
         {
-            r_attributes = attr_it->second.first;
-        }
-
-        // special case for simple ellipse markers
-        // to allow for full control over rx/ry dimensions
-        if (filename_ == "shape://ellipse"
-           && (has_key(sym_,keys::width) || has_key(sym_,keys::height)))
-        {
+            // special case for simple ellipse markers
+            // to allow for full control over rx/ry dimensions
             // Ellipses are built procedurally. We do caching of the built ellipses, this is useful for rendering stages
-            std::tuple<double, double, double> marker_key(
-                get<double>(sym_, keys::width, feature_, common_.vars_, -std::numeric_limits<double>::infinity()),
-                get<double>(sym_, keys::height, feature_, common_.vars_, -std::numeric_limits<double>::infinity()),
-                get<double>(sym_, keys::stroke_width, feature_, common_.vars_, -std::numeric_limits<double>::infinity())
-            );
+            std::tuple<double, double, double> marker_key;
+            {
+                marker_key = std::tuple<double, double, double>(
+                    get<double>(sym_, keys::width, feature_, common_.vars_, -std::numeric_limits<double>::infinity()),
+                    get<double>(sym_, keys::height, feature_, common_.vars_, -std::numeric_limits<double>::infinity()),
+                    get<double>(sym_, keys::stroke_width, feature_, common_.vars_, -std::numeric_limits<double>::infinity())
+                );
+            }
 
-            auto marker_it = cached_ellipses_.find(marker_key);
-            if (marker_it == cached_ellipses_.end())
+            {
+                marker_ptr = nullptr;
+#ifdef MAPNIK_THREADSAFE
+                std::lock_guard<std::mutex> lock(mutex_);
+#endif
+                auto marker_it = cached_ellipses_.find(marker_key);
+                if (marker_it != cached_ellipses_.end())
+                {
+                    marker_ptr = marker_it->second;
+                }
+            }
+
+            if (!marker_ptr)
             {
                 marker_ptr = std::make_shared<svg_storage_type>();
-
                 vertex_stl_adapter<svg_path_storage> stl_storage(marker_ptr->source());
                 svg_path_adapter svg_path(stl_storage);
                 build_ellipse(sym_, feature_, common_.vars_, *marker_ptr, svg_path);
 
+#ifdef MAPNIK_THREADSAFE
+                std::lock_guard<std::mutex> lock(mutex_);
+#endif
                 if (cached_ellipses_.size() > ellipses_cache_size)
                 {
                     cached_ellipses_.erase(cached_ellipses_.begin());
                 }
-                marker_it = cached_ellipses_.emplace(marker_key, marker_ptr).first;
-            }
+                cached_ellipses_.emplace(marker_key, marker_ptr);
 
-            marker_ptr = marker_it->second;
-        }
-        else
-        {
-            box2d<double> const& bbox = mark.bounding_box();
-            setup_transform_scaling(image_tr, bbox.width(), bbox.height(), feature_, common_.vars_, sym_);
+            }
         }
 
         vertex_stl_adapter<svg_path_storage> stl_storage(marker_ptr->source());

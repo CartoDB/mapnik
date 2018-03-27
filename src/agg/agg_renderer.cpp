@@ -190,7 +190,7 @@ void agg_renderer<T0,T1>::setup(Map const &m)
     }
 
     auto const & params = m.get_extra_parameters();
-    rasterized_symbols_cache_disabled_ = (params.get<bool>("rasterized_symbols_cache_disabled") == true);
+    markers_symbolizer_caches_disabled_ = (params.get<bool>("markers_symbolizer_caches_disabled") == true);
 
     MAPNIK_LOG_DEBUG(agg_renderer) << "agg_renderer: Scale=" << m.scale();
 }

@@ -611,14 +611,6 @@ struct rgba8T
     {
         return self_type(rgba::from_wavelength(wl, gamma));
     }
-
-    bool operator <(const self_type& o) const
-    {
-        if (r != o.r) return r < o.r;
-        if (g != o.g) return g < o.g;
-        if (b != o.b) return b < o.b;
-        return a < o.a;
-    }
 };
 
 typedef rgba8T<linear> rgba8;

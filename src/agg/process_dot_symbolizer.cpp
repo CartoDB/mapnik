@@ -91,6 +91,7 @@ void agg_renderer<T0,T1>::process(dot_symbolizer const& sym,
                                   mapnik::feature_impl & feature,
                                   proj_transform const& prj_trans)
 {
+    METRIC_UNUSED auto t = agg_renderer::metrics_.measure_time("Agg_PDotS");
     double width = 0.0;
     double height = 0.0;
     bool has_width = has_key(sym,keys::width);

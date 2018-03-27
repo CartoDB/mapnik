@@ -10,6 +10,7 @@ Changes:
  - Fix build issue with MAPNIK_THREADSAFE disabled
  - Metrics: Internal rework (no mutex, no tree) to improve performance
  - Metrics: Add metrics for feature types
+ - Metrics: Add metrics to the agg renderer
 
 ## 3.0.15.6
 

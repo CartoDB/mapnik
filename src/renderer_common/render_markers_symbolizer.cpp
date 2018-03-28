@@ -128,7 +128,7 @@ struct render_marker_symbolizer_visitor
         agg::trans_affine image_tr = agg::trans_affine_scaling(common_.scale_factor_);
 
         boost::optional<svg_path_ptr> const& stock_vector_marker = mark.get_data();
-        svg_path_ptr marker_ptr = nullptr;
+        svg_path_ptr marker_ptr = *stock_vector_marker;
 
         std::shared_ptr<svg_attribute_type> r_attributes = nullptr;
 
@@ -191,6 +191,7 @@ struct render_marker_symbolizer_visitor
             std::tuple<double, double, double> marker_key;
             if ( !renderer_context_.symbolizer_caches_disabled_ )
             {
+                marker_ptr = nullptr;
                 marker_key = std::tuple<double, double, double>(
                     get<double>(sym_, keys::width, feature_, common_.vars_, -std::numeric_limits<double>::infinity()),
                     get<double>(sym_, keys::height, feature_, common_.vars_, -std::numeric_limits<double>::infinity()),

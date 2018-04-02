@@ -130,7 +130,7 @@ struct render_marker_symbolizer_visitor
         boost::optional<svg_path_ptr> const& stock_vector_marker = mark.get_data();
         svg_path_ptr marker_ptr = *stock_vector_marker;
 
-        std::shared_ptr<svg_attribute_type> r_attributes;
+        std::shared_ptr<svg_attribute_type> r_attributes = nullptr;
 
         // Look up the feature/symbolizer attributes from the cache.
         // We are using raw symbolizer pointer as a cache key. As this
@@ -139,6 +139,7 @@ struct render_marker_symbolizer_visitor
         markers_symbolizer const* attr_key = &sym_;
 
         // Limit the scope of the metrics mutex
+        if (!renderer_context_.symbolizer_caches_disabled_)
         {
 #ifdef MAPNIK_THREADSAFE
             std::lock_guard<std::mutex> lock(mutex_);
@@ -159,7 +160,7 @@ struct render_marker_symbolizer_visitor
 
             // We can only cache the attributes using the given key if no expressions are used in properties.
             // Otherwise the expressions may refer to feature-specific values.
-            bool cacheable = std::all_of(
+            bool cacheable = !renderer_context_.symbolizer_caches_disabled_ && std::all_of(
                 sym_.properties.begin(), sym_.properties.end(),
                 [](symbolizer_base::cont_type::value_type const& key_prop) { return !is_expression(key_prop.second); }
             );
@@ -188,16 +189,14 @@ struct render_marker_symbolizer_visitor
             // to allow for full control over rx/ry dimensions
             // Ellipses are built procedurally. We do caching of the built ellipses, this is useful for rendering stages
             std::tuple<double, double, double> marker_key;
+            if ( !renderer_context_.symbolizer_caches_disabled_ )
             {
+                marker_ptr = nullptr;
                 marker_key = std::tuple<double, double, double>(
                     get<double>(sym_, keys::width, feature_, common_.vars_, -std::numeric_limits<double>::infinity()),
                     get<double>(sym_, keys::height, feature_, common_.vars_, -std::numeric_limits<double>::infinity()),
                     get<double>(sym_, keys::stroke_width, feature_, common_.vars_, -std::numeric_limits<double>::infinity())
                 );
-            }
-
-            {
-                marker_ptr = nullptr;
 #ifdef MAPNIK_THREADSAFE
                 std::lock_guard<std::mutex> lock(mutex_);
 #endif
@@ -216,15 +215,17 @@ struct render_marker_symbolizer_visitor
                 svg_path_adapter svg_path(stl_storage);
                 build_ellipse(sym_, feature_, common_.vars_, *marker_ptr, svg_path);
 
-#ifdef MAPNIK_THREADSAFE
-                std::lock_guard<std::mutex> lock(mutex_);
-#endif
-                if (cached_ellipses_.size() > ellipses_cache_size)
+                if ( !renderer_context_.symbolizer_caches_disabled_ )
                 {
-                    cached_ellipses_.erase(cached_ellipses_.begin());
+#ifdef MAPNIK_THREADSAFE
+                    std::lock_guard<std::mutex> lock(mutex_);
+#endif
+                    if (cached_ellipses_.size() > ellipses_cache_size)
+                    {
+                        cached_ellipses_.erase(cached_ellipses_.begin());
+                    }
+                    cached_ellipses_.emplace(marker_key, marker_ptr);
                 }
-                cached_ellipses_.emplace(marker_key, marker_ptr);
-
             }
         }
 

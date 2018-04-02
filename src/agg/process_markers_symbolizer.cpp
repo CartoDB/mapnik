@@ -64,8 +64,9 @@ struct agg_markers_renderer_context : markers_renderer_context
                                  attributes const& vars,
                                  BufferType & buf,
                                  RasterizerType & ras,
-                                 metrics & m)
-      : markers_renderer_context(m),
+                                 metrics & m,
+                                 bool symbolizer_caches_disabled)
+      : markers_renderer_context(m, symbolizer_caches_disabled),
         buf_(buf),
         pixf_(buf_),
         renb_(pixf_),
@@ -83,7 +84,7 @@ struct agg_markers_renderer_context : markers_renderer_context
     {
         // We try to reuse existing marker images.
         // We currently do it only for single attribute set.
-        if (attrs.size() == 1)
+        if (!symbolizer_caches_disabled_ && attrs.size() == 1)
         {
             // Markers are generally drawn using 2 shapes. To be safe, check
             // that at most one of the shapes has transparency.
@@ -307,7 +308,7 @@ void agg_renderer<T0,T1>::process(markers_symbolizer const& sym,
     using context_type = detail::agg_markers_renderer_context<svg_renderer_type,
                                                               buf_type,
                                                               rasterizer>;
-    context_type renderer_context(sym, feature, common_.vars_, render_buffer, *ras_ptr, agg_renderer::metrics_);
+    context_type renderer_context(sym, feature, common_.vars_, render_buffer, *ras_ptr, agg_renderer::metrics_, markers_symbolizer_caches_disabled_);
     render_markers_symbolizer(
         sym, feature, prj_trans, common_, clip_box, renderer_context);
 }

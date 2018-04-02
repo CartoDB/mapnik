@@ -168,6 +168,7 @@ private:
     gamma_method_enum gamma_method_;
     double gamma_;
     renderer_common common_;
+    bool markers_symbolizer_caches_disabled_;
     void setup(Map const& m);
 };
 

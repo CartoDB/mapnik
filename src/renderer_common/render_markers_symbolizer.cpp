@@ -130,7 +130,7 @@ struct render_marker_symbolizer_visitor
         boost::optional<svg_path_ptr> const& stock_vector_marker = mark.get_data();
         svg_path_ptr marker_ptr = *stock_vector_marker;
 
-        std::shared_ptr<svg_attribute_type> r_attributes = nullptr;
+        svg_attribute_ptr r_attributes = nullptr;
 
         // Look up the feature/symbolizer attributes from the cache.
         // We are using raw symbolizer pointer as a cache key. As this
@@ -239,7 +239,7 @@ struct render_marker_symbolizer_visitor
 
         vector_dispatch_type rasterizer_dispatch(marker_ptr,
                                                  svg_path,
-                                                 *r_attributes,
+                                                 r_attributes,
                                                  image_tr,
                                                  sym_,
                                                  *common_.detector_,
@@ -292,7 +292,7 @@ struct render_marker_symbolizer_visitor
 
     static std::map<
                markers_symbolizer const*,
-               std::pair<std::shared_ptr<svg_attribute_type>, markers_symbolizer::cont_type>
+               std::pair<svg_attribute_ptr, markers_symbolizer::cont_type>
            > cached_attributes_;
     static std::map<
                std::tuple<double, double, double>,
@@ -311,7 +311,7 @@ std::mutex render_marker_symbolizer_visitor<Detector, RendererType, ContextType>
 template <typename Detector, typename RendererType, typename ContextType>
 std::map<
     markers_symbolizer const*,
-    std::pair<std::shared_ptr<svg_attribute_type>, markers_symbolizer::cont_type>
+    std::pair<svg_attribute_ptr, markers_symbolizer::cont_type>
 > render_marker_symbolizer_visitor<Detector, RendererType, ContextType>::cached_attributes_;
 
 template <typename Detector, typename RendererType, typename ContextType>

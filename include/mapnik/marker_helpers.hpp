@@ -50,14 +50,13 @@ namespace mapnik {
 
 struct clip_poly_tag;
 
-using svg_attribute_type = agg::pod_bvector<svg::path_attributes>;
 
 template <typename Detector>
 struct vector_markers_dispatch : util::noncopyable
 {
     vector_markers_dispatch(svg_path_ptr const& src,
                             svg_path_adapter & path,
-                            svg_attribute_type const& attrs,
+                            svg_attribute_ptr attrs,
                             agg::trans_affine const& marker_trans,
                             symbolizer_base const& sym,
                             Detector & detector,
@@ -101,7 +100,7 @@ protected:
     markers_renderer_context & renderer_context_;
     svg_path_ptr const& src_;
     svg_path_adapter & path_;
-    svg_attribute_type const& attrs_;
+    svg_attribute_ptr attrs_;
     Detector & detector_;
 };
 

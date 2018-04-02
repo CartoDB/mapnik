@@ -13,6 +13,7 @@ Changes:
  - Metrics: Add metrics to the agg renderer
  - Metrics: Add metrics for cache misses
  - Markers Symbolizer Caches: Add a map extra parameter `markers_symbolizer_caches_disabled` that can be set to true to disable them.
+ - Markers cache: Use pointer to cached attributes as part of the key. Also avoid a double free.
 
 ## 3.0.15.6
 

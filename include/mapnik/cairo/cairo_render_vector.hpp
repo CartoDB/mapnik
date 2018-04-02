@@ -26,6 +26,7 @@
 #define MAPNIK_CAIRO_RENDER_VECTOR_HPP
 
 // mapnik
+#include <mapnik/marker.hpp>
 #include <mapnik/svg/svg_path_adapter.hpp>
 
 namespace agg { struct trans_affine; }
@@ -38,7 +39,7 @@ template <typename T> class box2d;
 namespace svg { struct path_attributes; }
 
 void render_vector_marker(cairo_context & context, svg::svg_path_adapter & svg_path,
-                          agg::pod_bvector<svg::path_attributes> const & attributes,
+                          svg_attribute_ptr attributes,
                           box2d<double> const& bbox, agg::trans_affine const& tr,
                           double opacity);
 

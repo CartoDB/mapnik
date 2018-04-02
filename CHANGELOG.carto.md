@@ -2,7 +2,7 @@
 
 ## 3.0.15.7
 
-**Release date**: 2018-XX-XX
+**Release date**: 2018-04-02
 
 Changes:
  - Metrics: Add metrics in the grid renderer

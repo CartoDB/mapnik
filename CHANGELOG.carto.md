@@ -1,5 +1,12 @@
 # CARTO Mapnik Changelog
 
+## 3.0.15.8
+
+**Release date**: 2018-XX-XX
+
+Changes:
+ - Qualify ICU types explicitly
+
 ## 3.0.15.7
 
 **Release date**: 2018-04-02

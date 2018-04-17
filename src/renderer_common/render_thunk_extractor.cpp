@@ -89,8 +89,8 @@ render_thunk_extractor::render_thunk_extractor(box2d<double> & box,
 
 void render_thunk_extractor::operator()(markers_symbolizer const& sym) const
 {
-    using context_type = detail::thunk_markers_renderer_context;
-    context_type renderer_context(sym, feature_, vars_, thunks_, const_cast<metrics &>(this->metrics_));
+    using t_context_type = detail::thunk_markers_renderer_context;
+    t_context_type renderer_context(sym, feature_, vars_, thunks_, const_cast<metrics &>(this->metrics_));
 
     render_markers_symbolizer(
             sym, feature_, prj_trans_, common_, clipping_extent_, renderer_context);

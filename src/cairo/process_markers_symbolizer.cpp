@@ -76,8 +76,8 @@ void cairo_renderer<T>::process(markers_symbolizer const& sym,
     context_.set_operator(comp_op);
     box2d<double> clip_box = common_.query_extent_;
 
-    using context_type = detail::cairo_markers_renderer_context;
-    context_type renderer_context(context_, this->metrics_);
+    using c_context_type = detail::cairo_markers_renderer_context;
+    c_context_type renderer_context(context_, this->metrics_);
 
     render_markers_symbolizer(
         sym, feature, prj_trans, common_, clip_box,

@@ -306,10 +306,10 @@ void agg_renderer<T0,T1>::process(markers_symbolizer const& sym,
     buf_type render_buffer(current_buffer_->bytes(), current_buffer_->width(), current_buffer_->height(), current_buffer_->row_size());
     box2d<double> clip_box = clipping_extent(common_);
 
-    using context_type = detail::agg_markers_renderer_context<svg_renderer_type,
-                                                              buf_type,
-                                                              rasterizer>;
-    context_type renderer_context(sym, feature, common_.vars_, render_buffer, *ras_ptr, agg_renderer::metrics_, markers_symbolizer_caches_disabled_);
+    using agg_context_type = detail::agg_markers_renderer_context<svg_renderer_type,
+                                                                  buf_type,
+                                                                  rasterizer>;
+    agg_context_type renderer_context(sym, feature, common_.vars_, render_buffer, *ras_ptr, agg_renderer::metrics_, markers_symbolizer_caches_disabled_);
     render_markers_symbolizer(
         sym, feature, prj_trans, common_, clip_box, renderer_context);
 }

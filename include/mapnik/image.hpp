@@ -81,7 +81,7 @@ private:
     double scaling_;
     bool premultiplied_alpha_;
     bool painted_;
-public:METRIC_UNUSED
+public:
     metrics metrics_ = metrics(false);
 
     image();

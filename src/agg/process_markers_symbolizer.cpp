@@ -59,7 +59,7 @@ struct agg_markers_renderer_context : markers_renderer_context
     using attribute_source_type = typename SvgRenderer::attribute_source_type;
     using pixfmt_type = typename renderer_base::pixfmt_type;
 
-    agg_markers_renderer_context(symbolizer_base const& sym,
+    agg_markers_renderer_context(markers_symbolizer const& sym,
                                  feature_impl const& feature,
                                  attributes const& vars,
                                  BufferType & buf,
@@ -111,7 +111,7 @@ struct agg_markers_renderer_context : markers_renderer_context
 
                 int sample_idx = static_cast<int>(sample_y) * sampling_rate + static_cast<int>(sample_x);
 
-                std::tuple<svg_path_ptr, int, svg_attribute_ptr> key(src, sample_idx, attrs);
+                std::pair<svg_attribute_ptr, int> key(attrs, sample_idx);
 
                 std::shared_ptr<image_rgba8> fill_img = nullptr;
                 std::shared_ptr<image_rgba8> stroke_img = nullptr;
@@ -252,7 +252,7 @@ private:
 #endif
 
     static std::map<
-		std::tuple<svg_path_ptr, int, svg_attribute_ptr>,
+		std::pair<svg_attribute_ptr, int>,
 		std::pair<std::shared_ptr<image_rgba8>, std::shared_ptr<image_rgba8>>
 	    > cached_images_;
 
@@ -267,7 +267,7 @@ std::mutex agg_markers_renderer_context<SvgRenderer, BufferType, RasterizerType>
 
 template <typename SvgRenderer, typename BufferType, typename RasterizerType>
 std::map<
-    std::tuple<svg_path_ptr, int, svg_attribute_ptr>,
+    std::pair<svg_attribute_ptr, int>,
     std::pair<std::shared_ptr<image_rgba8>, std::shared_ptr<image_rgba8>>
 > agg_markers_renderer_context<SvgRenderer, BufferType, RasterizerType>::cached_images_ = {};
 
@@ -310,8 +310,7 @@ void agg_renderer<T0,T1>::process(markers_symbolizer const& sym,
                                                                   buf_type,
                                                                   rasterizer>;
     agg_context_type renderer_context(sym, feature, common_.vars_, render_buffer, *ras_ptr, agg_renderer::metrics_, markers_symbolizer_caches_disabled_);
-    render_markers_symbolizer(
-        sym, feature, prj_trans, common_, clip_box, renderer_context);
+    render_markers_symbolizer(sym, feature, prj_trans, common_, clip_box, renderer_context);
 }
 
 template void agg_renderer<image_rgba8>::process(markers_symbolizer const&,

@@ -65,7 +65,7 @@ void render_pattern<image_rgba8>(rasterizer & ras,
     mapnik::svg::vertex_stl_adapter<mapnik::svg::svg_path_storage> stl_storage(marker.get_data()->source());
     mapnik::svg::svg_path_adapter svg_path(stl_storage);
     mapnik::svg::svg_renderer_agg<mapnik::svg::svg_path_adapter,
-                                  agg::pod_bvector<mapnik::svg::path_attributes>,
+                                  svg_attribute_type,
                                   renderer_solid,
                                   pixfmt > svg_renderer(svg_path,
                                                         marker.get_data()->attributes());

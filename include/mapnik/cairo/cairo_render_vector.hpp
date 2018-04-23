@@ -39,7 +39,7 @@ template <typename T> class box2d;
 namespace svg { struct path_attributes; }
 
 void render_vector_marker(cairo_context & context, svg::svg_path_adapter & svg_path,
-                          svg_attribute_ptr attributes,
+                          svg_attribute_type const& attributes,
                           box2d<double> const& bbox, agg::trans_affine const& tr,
                           double opacity);
 

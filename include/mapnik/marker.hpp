@@ -36,6 +36,7 @@
 
 // stl
 #include <memory>
+#include <vector>
 
 namespace mapnik
 {
@@ -45,8 +46,7 @@ namespace svg { struct path_attributes; }
 
 using svg::svg_path_adapter;
 
-using svg_attribute_type = agg::pod_bvector<svg::path_attributes>;
-using svg_attribute_ptr = std::shared_ptr<agg::pod_bvector<svg::path_attributes>>;
+using svg_attribute_type = std::vector<svg::path_attributes>;
 using svg_storage_type = svg::svg_storage<svg::svg_path_storage, svg_attribute_type>;
 using svg_path_ptr = std::shared_ptr<svg_storage_type>;
 

@@ -24,6 +24,7 @@
 #define MAPNIK_SVG_CONVERTER_HPP
 
 // mapnik
+#include <mapnik/marker.hpp>
 #include <mapnik/svg/svg_path_attributes.hpp>
 #include <mapnik/svg/svg_path_adapter.hpp>
 #include <mapnik/util/noncopyable.hpp>
@@ -61,7 +62,7 @@ public:
     void begin_path()
     {
         std::size_t idx = source_.start_new_path();
-        attributes_.add(path_attributes(cur_attr(), safe_cast<unsigned>(idx)));
+        attributes_.push_back(path_attributes(cur_attr(), safe_cast<unsigned>(idx)));
     }
 
     void end_path()
@@ -70,7 +71,7 @@ public:
         {
             throw std::runtime_error("end_path : The path was not begun");
         }
-        path_attributes& attr = attributes_[attributes_.size() - 1];
+        path_attributes& attr = attributes_.back();
         unsigned idx = attr.index;
         attr = cur_attr();
         attr.index = idx;
@@ -172,7 +173,6 @@ public:
         else
         {
             source_.arc_to(rx, ry, angle, large_arc_flag, sweep_flag, x, y);
-
         }
     }
 
@@ -183,9 +183,9 @@ public:
 
     void push_attr()
     {
-        attr_stack_.add(attr_stack_.size() ?
-                        attr_stack_[attr_stack_.size() - 1] :
-                        path_attributes());
+        attr_stack_.push_back(attr_stack_.size() ?
+                              attr_stack_.back() :
+                              path_attributes());
     }
     void pop_attr()
     {
@@ -193,7 +193,7 @@ public:
         {
             throw std::runtime_error("pop_attr : Attribute stack is empty");
         }
-        attr_stack_.remove_last();
+        attr_stack_.pop_back();
     }
 
     // Attribute setting functions.
@@ -356,7 +356,7 @@ public:
         {
             throw std::runtime_error("cur_attr : Attribute stack is empty");
         }
-        return attr_stack_[attr_stack_.size() - 1];
+        return attr_stack_.back();
     }
 
 private:
@@ -370,7 +370,7 @@ private:
 };
 
 
-using svg_converter_type = svg_converter<svg_path_adapter,agg::pod_bvector<mapnik::svg::path_attributes> >;
+using svg_converter_type = svg_converter<svg_path_adapter,svg_attribute_type>;
 
 }}
 

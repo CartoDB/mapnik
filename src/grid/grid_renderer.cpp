@@ -176,10 +176,9 @@ struct grid_render_marker_visitor
         vertex_stl_adapter<svg_path_storage> stl_storage(marker.get_data()->source());
         svg_path_adapter svg_path(stl_storage);
         svg_renderer_agg<svg_path_adapter,
-            agg::pod_bvector<path_attributes>,
+            svg_attribute_type,
             renderer_type,
-            pixfmt_type> svg_renderer(svg_path,
-                                                marker.get_data()->attributes());
+            pixfmt_type> svg_renderer(svg_path, marker.get_data()->attributes());
 
         svg_renderer.render_id(*ras_ptr_, sl, renb, feature_.id(), mtx, opacity_, bbox);
     }

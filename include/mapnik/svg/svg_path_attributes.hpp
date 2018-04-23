@@ -61,6 +61,15 @@ struct path_attributes
     bool         display_flag;
     dash_array   dash;
     double       dash_offset;
+
+    std::map<int, std::pair<std::shared_ptr<image_rgba8>, std::shared_ptr<image_rgba8>>> cached_images;
+#ifdef MAPNIK_THREADSAFE
+    std::shared_ptr<std::mutex> image_mutex;
+#endif
+    static constexpr size_t cache_size = 4096; // maximum number of images to cache. Note that the number of actual images stored depends also on sampling_rate
+    static constexpr int sampling_rate = 8; // this determines subpixel precision. The larger the value, the closer the solution will be compared to the reference but will reduce the cache hits
+
+
     // Empty constructor
     path_attributes() :
         fill_gradient(),
@@ -84,7 +93,11 @@ struct path_attributes
         visibility_flag(true),
         display_flag(true),
         dash(),
-        dash_offset(0.0)
+        dash_offset(0.0),
+        cached_images({})
+#ifdef MAPNIK_THREADSAFE
+       ,image_mutex(new std::mutex())
+#endif
     {}
 
     // Copy constructor
@@ -110,7 +123,12 @@ struct path_attributes
           visibility_flag(attr.visibility_flag),
           display_flag(attr.display_flag),
           dash(attr.dash),
-          dash_offset(attr.dash_offset)
+          dash_offset(attr.dash_offset),
+          cached_images(attr.cached_images)
+#ifdef MAPNIK_THREADSAFE
+         ,image_mutex(attr.image_mutex)
+#endif
+
     {}
     // Copy constructor with new index value
     path_attributes(path_attributes const& attr, unsigned idx)
@@ -135,7 +153,11 @@ struct path_attributes
           visibility_flag(attr.visibility_flag),
           display_flag(attr.display_flag),
           dash(attr.dash),
-          dash_offset(attr.dash_offset)
+          dash_offset(attr.dash_offset),
+          cached_images(attr.cached_images)
+#ifdef MAPNIK_THREADSAFE
+         ,image_mutex(attr.image_mutex)
+#endif
     {}
 };
 

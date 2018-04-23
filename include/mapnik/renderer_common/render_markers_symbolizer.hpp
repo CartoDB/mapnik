@@ -63,7 +63,7 @@ struct markers_renderer_context : util::noncopyable
 
     virtual void render_marker(svg_path_ptr const& src,
                                svg_path_adapter & path,
-                               svg_attribute_ptr attrs,
+                               svg_attribute_type & attrs,
                                markers_dispatch_params const& params,
                                agg::trans_affine const& marker_tr) = 0;
 

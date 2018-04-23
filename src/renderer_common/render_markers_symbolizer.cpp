@@ -130,7 +130,12 @@ struct render_marker_symbolizer_visitor
         boost::optional<svg_path_ptr> const& stock_vector_marker = mark.get_data();
         svg_path_ptr marker_ptr = *stock_vector_marker;
 
-        svg_attribute_ptr r_attributes = nullptr;
+        std::shared_ptr<svg_attribute_type> r_attributes = nullptr;
+
+        bool cacheable = !renderer_context_.symbolizer_caches_disabled_ && std::all_of(
+            sym_.properties.begin(), sym_.properties.end(),
+            [](symbolizer_base::cont_type::value_type const& key_prop) { return !is_expression(key_prop.second); }
+        );
 
         // Look up the feature/symbolizer attributes from the cache.
         // We are using raw symbolizer pointer as a cache key. As this
@@ -139,7 +144,7 @@ struct render_marker_symbolizer_visitor
         markers_symbolizer const* attr_key = &sym_;
 
         // Limit the scope of the metrics mutex
-        if (!renderer_context_.symbolizer_caches_disabled_)
+        if (cacheable)
         {
 #ifdef MAPNIK_THREADSAFE
             std::lock_guard<std::mutex> lock(mutex_);
@@ -158,12 +163,6 @@ struct render_marker_symbolizer_visitor
             svg_attribute_type s_attributes;
             r_attributes = std::make_shared<svg_attribute_type>(get_marker_attributes(*stock_vector_marker, s_attributes));
 
-            // We can only cache the attributes using the given key if no expressions are used in properties.
-            // Otherwise the expressions may refer to feature-specific values.
-            bool cacheable = !renderer_context_.symbolizer_caches_disabled_ && std::all_of(
-                sym_.properties.begin(), sym_.properties.end(),
-                [](symbolizer_base::cont_type::value_type const& key_prop) { return !is_expression(key_prop.second); }
-            );
             if (cacheable)
             {
 #ifdef MAPNIK_THREADSAFE
@@ -189,9 +188,9 @@ struct render_marker_symbolizer_visitor
             // to allow for full control over rx/ry dimensions
             // Ellipses are built procedurally. We do caching of the built ellipses, this is useful for rendering stages
             std::tuple<double, double, double> marker_key;
-            if ( !renderer_context_.symbolizer_caches_disabled_ )
+            marker_ptr = nullptr;
+            if (cacheable)
             {
-                marker_ptr = nullptr;
                 marker_key = std::tuple<double, double, double>(
                     get<double>(sym_, keys::width, feature_, common_.vars_, -std::numeric_limits<double>::infinity()),
                     get<double>(sym_, keys::height, feature_, common_.vars_, -std::numeric_limits<double>::infinity()),
@@ -215,7 +214,7 @@ struct render_marker_symbolizer_visitor
                 svg_path_adapter svg_path(stl_storage);
                 build_ellipse(sym_, feature_, common_.vars_, *marker_ptr, svg_path);
 
-                if ( !renderer_context_.symbolizer_caches_disabled_ )
+                if (cacheable)
                 {
 #ifdef MAPNIK_THREADSAFE
                     std::lock_guard<std::mutex> lock(mutex_);
@@ -239,7 +238,7 @@ struct render_marker_symbolizer_visitor
 
         vector_dispatch_type rasterizer_dispatch(marker_ptr,
                                                  svg_path,
-                                                 r_attributes,
+                                                 *r_attributes,
                                                  image_tr,
                                                  sym_,
                                                  *common_.detector_,
@@ -292,7 +291,7 @@ struct render_marker_symbolizer_visitor
 
     static std::map<
                markers_symbolizer const*,
-               std::pair<svg_attribute_ptr, markers_symbolizer::cont_type>
+               std::pair<std::shared_ptr<svg_attribute_type>, markers_symbolizer::cont_type>
            > cached_attributes_;
     static std::map<
                std::tuple<double, double, double>,
@@ -311,7 +310,7 @@ std::mutex render_marker_symbolizer_visitor<Detector, RendererType, ContextType>
 template <typename Detector, typename RendererType, typename ContextType>
 std::map<
     markers_symbolizer const*,
-    std::pair<svg_attribute_ptr, markers_symbolizer::cont_type>
+    std::pair<std::shared_ptr<svg_attribute_type>, markers_symbolizer::cont_type>
 > render_marker_symbolizer_visitor<Detector, RendererType, ContextType>::cached_attributes_;
 
 template <typename Detector, typename RendererType, typename ContextType>

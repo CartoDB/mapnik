@@ -78,13 +78,13 @@ struct agg_markers_renderer_context : markers_renderer_context
 
     virtual void render_marker(svg_path_ptr const& src,
                                svg_path_adapter & path,
-                               svg_attribute_ptr attrs,
+                               svg_attribute_type & attrs,
                                markers_dispatch_params const& params,
                                agg::trans_affine const& marker_tr)
     {
         // We try to reuse existing marker images.
         // We currently do it only for single attribute set.
-        if (!symbolizer_caches_disabled_ && attrs->size() == 1)
+        if (!symbolizer_caches_disabled_ && attrs.size() == 1)
         {
             // Markers are generally drawn using 2 shapes. To be safe, check
             // that at most one of the shapes has transparency.
@@ -95,9 +95,9 @@ struct agg_markers_renderer_context : markers_renderer_context
             {
                 // Calculate canvas offsets
                 double margin = 0.0;
-                if ((*attrs)[0].stroke_flag || (*attrs)[0].stroke_gradient.get_gradient_type() != NO_GRADIENT)
+                if (attrs[0].stroke_flag || attrs[0].stroke_gradient.get_gradient_type() != NO_GRADIENT)
                 {
-                    margin = std::abs((*attrs)[0].stroke_width);
+                    margin = std::abs(attrs[0].stroke_width);
                 }
                 double x0 = std::floor(src->bounding_box().minx() - margin);
                 double y0 = std::floor(src->bounding_box().miny() - margin);
@@ -106,23 +106,22 @@ struct agg_markers_renderer_context : markers_renderer_context
                 double dx = marker_tr.tx - std::floor(marker_tr.tx);
                 double dy = marker_tr.ty - std::floor(marker_tr.ty);
 
-                double sample_x = std::floor(dx * sampling_rate);
-                double sample_y = std::floor(dy * sampling_rate);
+                double sample_x = std::floor(dx * attrs[0].sampling_rate);
+                double sample_y = std::floor(dy * attrs[0].sampling_rate);
 
-                int sample_idx = static_cast<int>(sample_y) * sampling_rate + static_cast<int>(sample_x);
-
-                std::pair<svg_attribute_ptr, int> key(attrs, sample_idx);
+                const int sample_idx = static_cast<int>(sample_y) *
+                                       attrs[0].sampling_rate + static_cast<int>(sample_x);
 
                 std::shared_ptr<image_rgba8> fill_img = nullptr;
                 std::shared_ptr<image_rgba8> stroke_img = nullptr;
                 bool cache_hit = false;
-                // Limit the scope of the cache mutex
                 {
+                    // Limit the scope of the cache mutex
 #ifdef MAPNIK_THREADSAFE
-                    std::lock_guard<std::mutex> lock(mutex_);
+                    std::lock_guard<std::mutex> lock(*(attrs[0].image_mutex));
 #endif
-                    auto it = cached_images_.find(key);
-                    if (it != cached_images_.end())
+                    auto it = attrs[0].cached_images.find(sample_idx);
+                    if (it != attrs[0].cached_images.end())
                     {
                         cache_hit = true;
                         fill_img = it->second.first;
@@ -146,7 +145,7 @@ struct agg_markers_renderer_context : markers_renderer_context
                     marker_tr_copy.ty = dy - y0;
 
                     // Create fill image
-                    if ((*attrs)[0].fill_flag || (*attrs)[0].fill_gradient.get_gradient_type() != NO_GRADIENT)
+                    if (attrs[0].fill_flag || attrs[0].fill_gradient.get_gradient_type() != NO_GRADIENT)
                     {
                         fill_img = std::make_shared<image_rgba8>(width, height, true);
 
@@ -154,7 +153,7 @@ struct agg_markers_renderer_context : markers_renderer_context
                         pixfmt_type pixf(buf);
                         renderer_base renb(pixf);
 
-                        svg_attribute_type attrs_copy = *attrs;
+                        auto attrs_copy = attrs;
                         attrs_copy[0].stroke_flag = false;
                         attrs_copy[0].stroke_gradient.set_gradient_type(NO_GRADIENT);
 
@@ -168,7 +167,7 @@ struct agg_markers_renderer_context : markers_renderer_context
                     }
 
                     // Create stroke image
-                    if ((*attrs)[0].stroke_flag || (*attrs)[0].stroke_gradient.get_gradient_type() != NO_GRADIENT)
+                    if (attrs[0].stroke_flag || attrs[0].stroke_gradient.get_gradient_type() != NO_GRADIENT)
                     {
                         stroke_img = std::make_shared<image_rgba8>(width, height, true);
 
@@ -176,7 +175,7 @@ struct agg_markers_renderer_context : markers_renderer_context
                         pixfmt_type pixf(buf);
                         renderer_base renb(pixf);
 
-                        svg_attribute_type attrs_copy = *attrs;
+                        auto attrs_copy = attrs;
                         attrs_copy[0].fill_flag = false;
                         attrs_copy[0].fill_gradient.set_gradient_type(NO_GRADIENT);
 
@@ -192,13 +191,13 @@ struct agg_markers_renderer_context : markers_renderer_context
                     // Update cache with the new images
                     {
 #ifdef MAPNIK_THREADSAFE
-                        std::lock_guard<std::mutex> lock(mutex_);
+                        std::lock_guard<std::mutex> lock(*(attrs[0].image_mutex));
 #endif
-                        if (cached_images_.size() > cache_size)
+                        if (attrs[0].cached_images.size() > attrs[0].cache_size)
                         {
-                            cached_images_.erase(cached_images_.begin());
+                            attrs[0].cached_images.erase(attrs[0].cached_images.begin());
                         }
-                        cached_images_.emplace(key, std::make_pair(fill_img, stroke_img));
+                        attrs[0].cached_images.emplace(sample_idx, std::make_pair(fill_img, stroke_img));
                     }
 
                     // Restore clip box
@@ -224,7 +223,7 @@ struct agg_markers_renderer_context : markers_renderer_context
 
         metrics_.measure_add("Agg_PMS_ImageCache_Ignored");
         // Fallback to non-cached rendering path
-        SvgRenderer svg_renderer(path, *attrs);
+        SvgRenderer svg_renderer(path, attrs);
         render_vector_marker(svg_renderer, ras_, renb_, src->bounding_box(), marker_tr, params.opacity, params.snap_to_pixels);
     }
 
@@ -246,37 +245,14 @@ private:
     renderer_base renb_;
     RasterizerType & ras_;
     composite_mode_e comp_op_;
-
-#ifdef MAPNIK_THREADSAFE
-    static std::mutex mutex_;
-#endif
-
-    static std::map<
-		std::pair<svg_attribute_ptr, int>,
-		std::pair<std::shared_ptr<image_rgba8>, std::shared_ptr<image_rgba8>>
-	    > cached_images_;
-
-    static constexpr size_t cache_size = 4096; // maximum number of images to cache. Note that the number of actual images stored depends also on sampling_rate
-    static constexpr int sampling_rate = 8; // this determines subpixel precision. The larger the value, the closer the solution will be compared to the reference but will reduce the cache hits
 };
-
-#ifdef MAPNIK_THREADSAFE
-template <typename SvgRenderer, typename BufferType, typename RasterizerType>
-std::mutex agg_markers_renderer_context<SvgRenderer, BufferType, RasterizerType>::mutex_;
-#endif
-
-template <typename SvgRenderer, typename BufferType, typename RasterizerType>
-std::map<
-    std::pair<svg_attribute_ptr, int>,
-    std::pair<std::shared_ptr<image_rgba8>, std::shared_ptr<image_rgba8>>
-> agg_markers_renderer_context<SvgRenderer, BufferType, RasterizerType>::cached_images_ = {};
 
 } // namespace detail
 
 template <typename T0, typename T1>
 void agg_renderer<T0,T1>::process(markers_symbolizer const& sym,
-                              feature_impl & feature,
-                              proj_transform const& prj_trans)
+                                  feature_impl & feature,
+                                  proj_transform const& prj_trans)
 {
     METRIC_UNUSED auto t = agg_renderer::metrics_.measure_time("Agg_PMarkerS");
     using namespace mapnik::svg;
@@ -314,6 +290,6 @@ void agg_renderer<T0,T1>::process(markers_symbolizer const& sym,
 }
 
 template void agg_renderer<image_rgba8>::process(markers_symbolizer const&,
-                                              mapnik::feature_impl &,
-                                              proj_transform const&);
+                                                 mapnik::feature_impl &,
+                                                 proj_transform const&);
 } // namespace mapnik

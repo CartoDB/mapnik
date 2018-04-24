@@ -118,9 +118,10 @@ struct render_marker_symbolizer_visitor
 
     void operator() (marker_null const&) const {}
 
-    void operator() (marker_svg const& mark) const
+    void operator() (marker_svg const& mark)
     {
         using namespace mapnik::svg;
+        auto &csym = const_cast<markers_symbolizer &>(sym_);
 
         // https://github.com/mapnik/mapnik/issues/1316
         bool snap_to_pixels = !mapnik::marker_cache::instance().is_uri(filename_);
@@ -133,31 +134,19 @@ struct render_marker_symbolizer_visitor
         std::shared_ptr<svg_attribute_type> r_attributes = nullptr;
 
         bool cacheable = !renderer_context_.symbolizer_caches_disabled_ && std::all_of(
-            sym_.properties.begin(), sym_.properties.end(),
+            csym.properties.begin(), csym.properties.end(),
             [](symbolizer_base::cont_type::value_type const& key_prop) { return !is_expression(key_prop.second); }
         );
 
-        // Look up the feature/symbolizer attributes from the cache.
-        // We are using raw symbolizer pointer as a cache key. As this
-        // is not reliable, we also store symbolizer properties in the cache
-        // and compare the actual value of properties in case of hit.
-        markers_symbolizer const* attr_key = &sym_;
-
-        // Limit the scope of the metrics mutex
         if (cacheable)
         {
 #ifdef MAPNIK_THREADSAFE
-            std::lock_guard<std::mutex> lock(mutex_);
+            std::lock_guard<std::mutex> lock(*csym.cache_mutex);
 #endif
-            auto attr_it = cached_attributes_.find(attr_key);
-            if (attr_it != cached_attributes_.end() &&
-                attr_it->second.second == sym_.properties)
-            {
-                r_attributes = attr_it->second.first;
-            }
+            r_attributes = csym.cached_attributes;
         }
 
-        if (!r_attributes)
+        if (r_attributes == nullptr)
         {
             renderer_context_.metrics_.measure_add("Agg_PMS_AttrCache_Miss");
             svg_attribute_type s_attributes;
@@ -166,21 +155,17 @@ struct render_marker_symbolizer_visitor
             if (cacheable)
             {
 #ifdef MAPNIK_THREADSAFE
-                std::lock_guard<std::mutex> lock(mutex_);
+                std::lock_guard<std::mutex> lock(*csym.cache_mutex);
 #endif
-                if (cached_attributes_.size() > attributes_cache_size)
-                {
-                    cached_attributes_.erase(cached_attributes_.begin());
-                }
-                cached_attributes_[attr_key] = std::make_pair(r_attributes, sym_.properties);
+                csym.cached_attributes = r_attributes;
             }
         }
 
         if (filename_ != "shape://ellipse" ||
-            !((has_key(sym_,keys::width) || has_key(sym_,keys::height))))
+            !((has_key(csym,keys::width) || has_key(csym,keys::height))))
         {
             box2d<double> const& bbox = mark.bounding_box();
-            setup_transform_scaling(image_tr, bbox.width(), bbox.height(), feature_, common_.vars_, sym_);
+            setup_transform_scaling(image_tr, bbox.width(), bbox.height(), feature_, common_.vars_, csym);
         }
         else
         {
@@ -192,15 +177,15 @@ struct render_marker_symbolizer_visitor
             if (cacheable)
             {
                 marker_key = std::tuple<double, double, double>(
-                    get<double>(sym_, keys::width, feature_, common_.vars_, -std::numeric_limits<double>::infinity()),
-                    get<double>(sym_, keys::height, feature_, common_.vars_, -std::numeric_limits<double>::infinity()),
-                    get<double>(sym_, keys::stroke_width, feature_, common_.vars_, -std::numeric_limits<double>::infinity())
+                    get<double>(csym, keys::width, feature_, common_.vars_, -std::numeric_limits<double>::infinity()),
+                    get<double>(csym, keys::height, feature_, common_.vars_, -std::numeric_limits<double>::infinity()),
+                    get<double>(csym, keys::stroke_width, feature_, common_.vars_, -std::numeric_limits<double>::infinity())
                 );
 #ifdef MAPNIK_THREADSAFE
-                std::lock_guard<std::mutex> lock(mutex_);
+                std::lock_guard<std::mutex> lock(*csym.cache_mutex);
 #endif
-                auto marker_it = cached_ellipses_.find(marker_key);
-                if (marker_it != cached_ellipses_.end())
+                auto marker_it = sym_.cached_ellipses.find(marker_key);
+                if (marker_it != sym_.cached_ellipses.end())
                 {
                     marker_ptr = marker_it->second;
                 }
@@ -212,18 +197,18 @@ struct render_marker_symbolizer_visitor
                 marker_ptr = std::make_shared<svg_storage_type>();
                 vertex_stl_adapter<svg_path_storage> stl_storage(marker_ptr->source());
                 svg_path_adapter svg_path(stl_storage);
-                build_ellipse(sym_, feature_, common_.vars_, *marker_ptr, svg_path);
+                build_ellipse(csym, feature_, common_.vars_, *marker_ptr, svg_path);
 
                 if (cacheable)
                 {
 #ifdef MAPNIK_THREADSAFE
-                    std::lock_guard<std::mutex> lock(mutex_);
+                    std::lock_guard<std::mutex> lock(*csym.cache_mutex);
 #endif
-                    if (cached_ellipses_.size() > ellipses_cache_size)
+                    if (csym.cached_ellipses.size() > csym.ellipses_cache_size)
                     {
-                        cached_ellipses_.erase(cached_ellipses_.begin());
+                        csym.cached_ellipses.erase(csym.cached_ellipses.begin());
                     }
-                    cached_ellipses_.emplace(marker_key, marker_ptr);
+                    csym.cached_ellipses.emplace(marker_key, marker_ptr);
                 }
             }
         }
@@ -231,7 +216,7 @@ struct render_marker_symbolizer_visitor
         vertex_stl_adapter<svg_path_storage> stl_storage(marker_ptr->source());
         svg_path_adapter svg_path(stl_storage);
 
-        if (auto image_transform = get_optional<transform_type>(sym_, keys::image_transform))
+        if (auto image_transform = get_optional<transform_type>(csym, keys::image_transform))
         {
             evaluate_transform(image_tr, feature_, common_.vars_, *image_transform, common_.scale_factor_);
         }
@@ -240,7 +225,7 @@ struct render_marker_symbolizer_visitor
                                                  svg_path,
                                                  *r_attributes,
                                                  image_tr,
-                                                 sym_,
+                                                 csym,
                                                  *common_.detector_,
                                                  common_.scale_factor_,
                                                  feature_,
@@ -284,40 +269,7 @@ struct render_marker_symbolizer_visitor
     RendererType const& common_;
     box2d<double> const& clip_box_;
     ContextType & renderer_context_;
-
-#ifdef MAPNIK_THREADSAFE
-    static std::mutex mutex_;
-#endif
-
-    static std::map<
-               markers_symbolizer const*,
-               std::pair<std::shared_ptr<svg_attribute_type>, markers_symbolizer::cont_type>
-           > cached_attributes_;
-    static std::map<
-               std::tuple<double, double, double>,
-               svg_path_ptr
-           > cached_ellipses_;
-
-    static constexpr size_t attributes_cache_size = 256; // maximum number attributes to cache
-    static constexpr size_t ellipses_cache_size = 256; // maximum number ellipses to cache
 };
-
-#ifdef MAPNIK_THREADSAFE
-template <typename Detector, typename RendererType, typename ContextType>
-std::mutex render_marker_symbolizer_visitor<Detector, RendererType, ContextType>::mutex_;
-#endif
-
-template <typename Detector, typename RendererType, typename ContextType>
-std::map<
-    markers_symbolizer const*,
-    std::pair<std::shared_ptr<svg_attribute_type>, markers_symbolizer::cont_type>
-> render_marker_symbolizer_visitor<Detector, RendererType, ContextType>::cached_attributes_;
-
-template <typename Detector, typename RendererType, typename ContextType>
-std::map<
-    std::tuple<double, double, double>,
-    svg_path_ptr
-> render_marker_symbolizer_visitor<Detector, RendererType, ContextType>::cached_ellipses_;
 
 } // namespace detail
 

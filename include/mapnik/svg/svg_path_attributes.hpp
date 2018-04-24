@@ -34,6 +34,9 @@
 #include "agg_trans_affine.h"
 #pragma GCC diagnostic pop
 
+#include <utility>
+#include <vector>
+
 namespace mapnik {
 namespace svg {
 
@@ -62,13 +65,16 @@ struct path_attributes
     dash_array   dash;
     double       dash_offset;
 
-    std::map<int, std::pair<std::shared_ptr<image_rgba8>, std::shared_ptr<image_rgba8>>> cached_images;
-#ifdef MAPNIK_THREADSAFE
-    std::shared_ptr<std::mutex> image_mutex;
-#endif
-    static constexpr size_t cache_size = 4096; // maximum number of images to cache. Note that the number of actual images stored depends also on sampling_rate
-    static constexpr int sampling_rate = 8; // this determines subpixel precision. The larger the value, the closer the solution will be compared to the reference but will reduce the cache hits
-
+    struct cache_line
+    {
+        std::shared_ptr<image_rgba8> fill_img = nullptr;
+        std::shared_ptr<image_rgba8> stroke_img = nullptr;
+        bool set = false;
+    };
+    std::vector<cache_line> cached_images;
+    // this determines subpixel precision. The larger the value, the closer the solution
+    // will be compared to the reference but will reduce the cache hits
+    static constexpr int sampling_rate = 8;
 
     // Empty constructor
     path_attributes() :
@@ -95,9 +101,6 @@ struct path_attributes
         dash(),
         dash_offset(0.0),
         cached_images({})
-#ifdef MAPNIK_THREADSAFE
-       ,image_mutex(new std::mutex())
-#endif
     {}
 
     // Copy constructor
@@ -125,11 +128,8 @@ struct path_attributes
           dash(attr.dash),
           dash_offset(attr.dash_offset),
           cached_images(attr.cached_images)
-#ifdef MAPNIK_THREADSAFE
-         ,image_mutex(attr.image_mutex)
-#endif
-
     {}
+
     // Copy constructor with new index value
     path_attributes(path_attributes const& attr, unsigned idx)
         : fill_gradient(attr.fill_gradient),
@@ -155,9 +155,6 @@ struct path_attributes
           dash(attr.dash),
           dash_offset(attr.dash_offset),
           cached_images(attr.cached_images)
-#ifdef MAPNIK_THREADSAFE
-         ,image_mutex(attr.image_mutex)
-#endif
     {}
 };
 

@@ -93,6 +93,8 @@ struct agg_markers_renderer_context : markers_renderer_context
                              marker_tr.shx == 0.0 && marker_tr.shy == 0.0;
             if (cacheable)
             {
+                using mapnik::svg::path_attributes;
+                constexpr int sampling_rate = path_attributes::sampling_rate;
                 // Calculate canvas offsets
                 double margin = 0.0;
                 if (attrs[0].stroke_flag || attrs[0].stroke_gradient.get_gradient_type() != NO_GRADIENT)
@@ -106,31 +108,22 @@ struct agg_markers_renderer_context : markers_renderer_context
                 double dx = marker_tr.tx - std::floor(marker_tr.tx);
                 double dy = marker_tr.ty - std::floor(marker_tr.ty);
 
-                double sample_x = std::floor(dx * attrs[0].sampling_rate);
-                double sample_y = std::floor(dy * attrs[0].sampling_rate);
+                double sample_x = std::floor(dx * sampling_rate);
+                double sample_y = std::floor(dy * sampling_rate);
 
                 const int sample_idx = static_cast<int>(sample_y) *
-                                       attrs[0].sampling_rate + static_cast<int>(sample_x);
+                                       sampling_rate + static_cast<int>(sample_x);
 
-                std::shared_ptr<image_rgba8> fill_img = nullptr;
-                std::shared_ptr<image_rgba8> stroke_img = nullptr;
-                bool cache_hit = false;
+                if (attrs[0].cached_images.empty())
                 {
-                    // Limit the scope of the cache mutex
-#ifdef MAPNIK_THREADSAFE
-                    std::lock_guard<std::mutex> lock(*(attrs[0].image_mutex));
-#endif
-                    auto it = attrs[0].cached_images.find(sample_idx);
-                    if (it != attrs[0].cached_images.end())
-                    {
-                        cache_hit = true;
-                        fill_img = it->second.first;
-                        stroke_img = it->second.second;
-                    }
+                    attrs[0].cached_images.resize(sampling_rate * sampling_rate);
                 }
 
-                if (!cache_hit)
+                path_attributes::cache_line & cl = attrs[0].cached_images[sample_idx];
+                if (!cl.set)
                 {
+                    std::shared_ptr<image_rgba8> fill_img = nullptr;
+                    std::shared_ptr<image_rgba8> stroke_img = nullptr;
                     metrics_.measure_add("Agg_PMS_ImageCache_Miss");
                     // Calculate canvas size
                     int width  = static_cast<int>(std::ceil(src->bounding_box().width()  + 2.0 * margin)) + 2;
@@ -189,16 +182,9 @@ struct agg_markers_renderer_context : markers_renderer_context
                     }
 
                     // Update cache with the new images
-                    {
-#ifdef MAPNIK_THREADSAFE
-                        std::lock_guard<std::mutex> lock(*(attrs[0].image_mutex));
-#endif
-                        if (attrs[0].cached_images.size() > attrs[0].cache_size)
-                        {
-                            attrs[0].cached_images.erase(attrs[0].cached_images.begin());
-                        }
-                        attrs[0].cached_images.emplace(sample_idx, std::make_pair(fill_img, stroke_img));
-                    }
+                    cl.set = true;
+                    cl.fill_img = fill_img;
+                    cl.stroke_img = stroke_img;
 
                     // Restore clip box
                     ras_.clip_box(0, 0, pixf_.width(), pixf_.height());
@@ -209,13 +195,13 @@ struct agg_markers_renderer_context : markers_renderer_context
                 marker_tr_copy.translate(x0 - dx, y0 - dy);
 
                 // Blit stroke and fill images
-                if (fill_img)
+                if (cl.fill_img)
                 {
-                    render_raster_marker(renb_, ras_, *fill_img, marker_tr_copy, params.opacity, params.scale_factor, params.snap_to_pixels);
+                    render_raster_marker(renb_, ras_, *cl.fill_img, marker_tr_copy, params.opacity, params.scale_factor, params.snap_to_pixels);
                 }
-                if (stroke_img)
+                if (cl.stroke_img)
                 {
-                    render_raster_marker(renb_, ras_, *stroke_img, marker_tr_copy, params.opacity, params.scale_factor, params.snap_to_pixels);
+                    render_raster_marker(renb_, ras_, *cl.stroke_img, marker_tr_copy, params.opacity, params.scale_factor, params.snap_to_pixels);
                 }
                 return;
             }

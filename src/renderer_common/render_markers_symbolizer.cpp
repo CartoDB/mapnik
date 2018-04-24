@@ -122,6 +122,19 @@ struct render_marker_symbolizer_visitor
     {
         using namespace mapnik::svg;
         auto &csym = const_cast<markers_symbolizer &>(sym_);
+        if (csym.cacheable == markers_symbolizer::cache_status::UNCHECKED)
+        {
+            if (std::all_of(csym.properties.begin(), csym.properties.end(),
+                [](symbolizer_base::cont_type::value_type const& key_prop)
+                  { return !is_expression(key_prop.second);}))
+            {
+                csym.cacheable = markers_symbolizer::cache_status::CACHEABLE;
+            }
+            else
+            {
+                csym.cacheable = markers_symbolizer::cache_status::UNCACHEABLE;
+            }
+        }
 
         // https://github.com/mapnik/mapnik/issues/1316
         bool snap_to_pixels = !mapnik::marker_cache::instance().is_uri(filename_);
@@ -133,16 +146,11 @@ struct render_marker_symbolizer_visitor
 
         std::shared_ptr<svg_attribute_type> r_attributes = nullptr;
 
-        bool cacheable = !renderer_context_.symbolizer_caches_disabled_ && std::all_of(
-            csym.properties.begin(), csym.properties.end(),
-            [](symbolizer_base::cont_type::value_type const& key_prop) { return !is_expression(key_prop.second); }
-        );
+        bool cacheable = !renderer_context_.symbolizer_caches_disabled_ &&
+                (csym.cacheable == markers_symbolizer::cache_status::CACHEABLE);
 
         if (cacheable)
         {
-#ifdef MAPNIK_THREADSAFE
-            std::lock_guard<std::mutex> lock(*csym.cache_mutex);
-#endif
             r_attributes = csym.cached_attributes;
         }
 
@@ -154,9 +162,6 @@ struct render_marker_symbolizer_visitor
 
             if (cacheable)
             {
-#ifdef MAPNIK_THREADSAFE
-                std::lock_guard<std::mutex> lock(*csym.cache_mutex);
-#endif
                 csym.cached_attributes = r_attributes;
             }
         }
@@ -169,28 +174,10 @@ struct render_marker_symbolizer_visitor
         }
         else
         {
-            // special case for simple ellipse markers
-            // to allow for full control over rx/ry dimensions
+            // special case for simple ellipse markers to allow for full control over rx/ry dimensions
             // Ellipses are built procedurally. We do caching of the built ellipses, this is useful for rendering stages
-            std::tuple<double, double, double> marker_key;
-            marker_ptr = nullptr;
-            if (cacheable)
-            {
-                marker_key = std::tuple<double, double, double>(
-                    get<double>(csym, keys::width, feature_, common_.vars_, -std::numeric_limits<double>::infinity()),
-                    get<double>(csym, keys::height, feature_, common_.vars_, -std::numeric_limits<double>::infinity()),
-                    get<double>(csym, keys::stroke_width, feature_, common_.vars_, -std::numeric_limits<double>::infinity())
-                );
-#ifdef MAPNIK_THREADSAFE
-                std::lock_guard<std::mutex> lock(*csym.cache_mutex);
-#endif
-                auto marker_it = sym_.cached_ellipses.find(marker_key);
-                if (marker_it != sym_.cached_ellipses.end())
-                {
-                    marker_ptr = marker_it->second;
-                }
-            }
 
+            marker_ptr = cacheable ? csym.cached_ellipse : nullptr;
             if (!marker_ptr)
             {
                 renderer_context_.metrics_.measure_add("Agg_PMS_EllipseCache_Miss");
@@ -199,16 +186,11 @@ struct render_marker_symbolizer_visitor
                 svg_path_adapter svg_path(stl_storage);
                 build_ellipse(csym, feature_, common_.vars_, *marker_ptr, svg_path);
 
+                // Since the symbolizer has either width or height and their value isn't
+                // an expression we can cache the output of the ellipse per symbolizer
                 if (cacheable)
                 {
-#ifdef MAPNIK_THREADSAFE
-                    std::lock_guard<std::mutex> lock(*csym.cache_mutex);
-#endif
-                    if (csym.cached_ellipses.size() > csym.ellipses_cache_size)
-                    {
-                        csym.cached_ellipses.erase(csym.cached_ellipses.begin());
-                    }
-                    csym.cached_ellipses.emplace(marker_key, marker_ptr);
+                    csym.cached_ellipse = marker_ptr;
                 }
             }
         }

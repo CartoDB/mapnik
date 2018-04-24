@@ -140,16 +140,17 @@ struct MAPNIK_DECL text_symbolizer : public symbolizer_base {};
 struct MAPNIK_DECL shield_symbolizer : public text_symbolizer {};
 struct MAPNIK_DECL line_pattern_symbolizer : public symbolizer_base {};
 struct MAPNIK_DECL polygon_pattern_symbolizer : public symbolizer_base {};
-struct MAPNIK_DECL markers_symbolizer : public symbolizer_base {
+
+//Marker symbolizer with cached attributes
+struct MAPNIK_DECL markers_symbolizer : public symbolizer_base
+{
+    enum cache_status { UNCHECKED, UNCACHEABLE, CACHEABLE };
 
     std::shared_ptr<svg_attribute_type> cached_attributes = nullptr;
-#ifdef MAPNIK_THREADSAFE
-    std::shared_ptr<std::mutex> cache_mutex = std::shared_ptr<std::mutex>(new std::mutex());
-#endif
-    std::map<std::tuple<double, double, double>, svg_path_ptr> cached_ellipses;
-
-    static constexpr size_t ellipses_cache_size = 256; // maximum number ellipses to cache
+    svg_path_ptr cached_ellipse = nullptr;
+    cache_status cacheable = UNCHECKED;
 };
+
 struct MAPNIK_DECL raster_symbolizer : public symbolizer_base {};
 struct MAPNIK_DECL building_symbolizer : public symbolizer_base {};
 struct MAPNIK_DECL group_symbolizer : public symbolizer_base {};

@@ -34,6 +34,7 @@
 #include <mapnik/attribute.hpp>
 #include <mapnik/text/font_feature_settings.hpp>
 #include <mapnik/util/variant.hpp>
+#include <mapnik/marker.hpp>
 
 // stl
 #include <memory>
@@ -139,7 +140,17 @@ struct MAPNIK_DECL text_symbolizer : public symbolizer_base {};
 struct MAPNIK_DECL shield_symbolizer : public text_symbolizer {};
 struct MAPNIK_DECL line_pattern_symbolizer : public symbolizer_base {};
 struct MAPNIK_DECL polygon_pattern_symbolizer : public symbolizer_base {};
-struct MAPNIK_DECL markers_symbolizer : public symbolizer_base {};
+
+//Marker symbolizer with cached attributes
+struct MAPNIK_DECL markers_symbolizer : public symbolizer_base
+{
+    enum cache_status { UNCHECKED, UNCACHEABLE, CACHEABLE };
+
+    std::shared_ptr<svg_attribute_type> cached_attributes = nullptr;
+    svg_path_ptr cached_ellipse = nullptr;
+    cache_status cacheable = UNCHECKED;
+};
+
 struct MAPNIK_DECL raster_symbolizer : public symbolizer_base {};
 struct MAPNIK_DECL building_symbolizer : public symbolizer_base {};
 struct MAPNIK_DECL group_symbolizer : public symbolizer_base {};

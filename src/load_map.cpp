@@ -148,15 +148,8 @@ private:
     std::string xml_base_path_;
 };
 
-
-void load_map(Map & map, std::string const& filename, bool strict, std::string base_path)
+void map_allow_overlap_optimization(Map &map)
 {
-    xml_tree tree;
-    tree.set_filename(filename);
-    read_xml(filename, tree.root());
-    map_parser parser(map, strict, filename);
-    parser.parse_map(map, tree.root(), base_path);
-
     // Due manual rule optimization for marker symbolizers. If all styles
     // use only marker symbolizers and all rules of the styles have explictly
     // define allow_overlap=true, then set ignore_placement=true. This has
@@ -182,7 +175,6 @@ void load_map(Map & map, std::string const& filename, bool strict, std::string b
                         }
                     }
                 }
-
                 // In all other cases (non-marker symbolizer, allow_overlap not explictly true) do not set ignore_placement
                 ignore_placement = false;
                 break;
@@ -209,6 +201,16 @@ void load_map(Map & map, std::string const& filename, bool strict, std::string b
     }
 }
 
+void load_map(Map & map, std::string const& filename, bool strict, std::string base_path)
+{
+    xml_tree tree;
+    tree.set_filename(filename);
+    read_xml(filename, tree.root());
+    map_parser parser(map, strict, filename);
+    parser.parse_map(map, tree.root(), base_path);
+    map_allow_overlap_optimization(map);
+}
+
 void load_map_string(Map & map, std::string const& str, bool strict, std::string base_path)
 {
     xml_tree tree;
@@ -222,6 +224,7 @@ void load_map_string(Map & map, std::string const& str, bool strict, std::string
     }
     map_parser parser(map, strict, base_path);
     parser.parse_map(map, tree.root(), base_path);
+    map_allow_overlap_optimization(map);
 }
 
 void map_parser::parse_map(Map & map, xml_node const& node, std::string const& base_path)

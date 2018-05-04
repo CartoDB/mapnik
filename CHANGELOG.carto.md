@@ -5,7 +5,8 @@
 **Release date**: 2018-XX-XX
 
 Changes:
- - Qualify ICU types explicitly
+ - Qualify ICU types explicitly (ICU 61 Compatibility)
+ - Move markers cache from a global scope to a per map scope. Multiple improvements to increase lookup speed and avoid the need for mutexes.
 
 ## 3.0.15.7
 

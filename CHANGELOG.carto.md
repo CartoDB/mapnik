@@ -8,6 +8,7 @@ Changes:
  - Qualify ICU types explicitly (ICU 61 Compatibility). Sent upstream.
  - Move markers cache from a global scope to a per map scope. Multiple improvements to increase lookup speed and avoid the need for mutexes.
  - Apply overlap optimization to `load_map_string` too. Generalized it to be used also for points and text. Sent upstream.
+ - Use pkg-config to find FreeType2 if available (Freetype 2.9.1+ compatibility)
 
 ## 3.0.15.7
 

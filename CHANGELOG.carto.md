@@ -5,8 +5,9 @@
 **Release date**: 2018-XX-XX
 
 Changes:
- - Qualify ICU types explicitly (ICU 61 Compatibility)
+ - Qualify ICU types explicitly (ICU 61 Compatibility). Sent upstream.
  - Move markers cache from a global scope to a per map scope. Multiple improvements to increase lookup speed and avoid the need for mutexes.
+ - Apply overlap optimization to `load_map_string` too. Generalized it to be used also for points and text. Sent upstream.
 
 ## 3.0.15.7
 

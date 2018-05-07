@@ -2,7 +2,7 @@
 
 ## 3.0.15.8
 
-**Release date**: 2018-XX-XX
+**Release date**: 2018-05-07
 
 Changes:
  - Qualify ICU types explicitly (ICU 61 Compatibility). Sent upstream.

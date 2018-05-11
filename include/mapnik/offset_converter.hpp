@@ -54,7 +54,7 @@ struct offset_converter
         , pre_first_(vertex2d::no_init)
         , pre_(vertex2d::no_init)
         , cur_(vertex2d::no_init)
-    {}
+        {}
 
     enum status
     {
@@ -342,51 +342,36 @@ private:
         vertex2d v1(vertex2d::no_init);
         vertex2d v2(vertex2d::no_init);
         vertex2d w(vertex2d::no_init);
-        vertex2d start(vertex2d::no_init);
         vertex2d start_v2(vertex2d::no_init);
         std::vector<vertex2d> points;
         std::vector<vertex2d> close_points;
         bool is_polygon = false;
         std::size_t cpt = 0;
         v0.cmd = geom_.vertex(&v0.x, &v0.y);
-        v1 = v0;
+        v1.x = v0.x;
+        v1.y = v0.y;
+        v1.cmd = v0.cmd;
         // PUSH INITIAL
-        points.push_back(v0);
+        points.push_back(vertex2d(v0.x, v0.y, v0.cmd));
         if (v0.cmd == SEG_END) // not enough vertices in source
         {
             return status_ = process;
         }
-        start = v0;
+        
         while ((v0.cmd = geom_.vertex(&v0.x, &v0.y)) != SEG_END)
         {
+            points.push_back(vertex2d(v0.x, v0.y, v0.cmd));
             if (v0.cmd == SEG_CLOSE)
             {
                 is_polygon = true;
-                auto & prev = points.back();
-                if (prev.x == start.x && prev.y == start.y)
-                {
-                    prev.x = v0.x; // hack
-                    prev.y = v0.y;
-                    prev.cmd = SEG_CLOSE; // account for dupes (line_to(move_to) + close_path) in agg poly clipper
-                    std::size_t size = points.size();
-                    if (size > 1) close_points.push_back(points[size - 2]);
-                    else close_points.push_back(prev);
-                    continue;
-                }
-                else
-                {
-                    close_points.push_back(v1);
-                }
+                close_points.push_back(vertex2d(v1.x, v1.y, v1.cmd));
             }
-            else if (v0.cmd == SEG_MOVETO)
-            {
-                start = v0;
-            }
-            v1 = v0;
-            points.push_back(v0);
+            v1.x = v0.x;
+            v1.y = v0.y;
+            v1.cmd = v0.cmd;
         }
         // Push SEG_END
-        points.push_back(vertex2d(v0.x,v0.y,SEG_END));
+        points.push_back(vertex2d(v0.x, v0.y, v0.cmd));
         std::size_t i = 0;
         v1 = points[i++];
         v2 = points[i++];
@@ -433,11 +418,11 @@ private:
         {
             dot = v_x1x0 * v_x1x2 + v_y1y0 * v_y1y2;      // dot product
             det = v_x1x0 * v_y1y2 - v_y1y0 * v_x1x2;      // determinant
-
+            
             joint_angle = std::atan2(det, dot);  // atan2(y, x) or atan2(sin, cos)
             if (joint_angle < 0) joint_angle = joint_angle + 2 * M_PI;
             joint_angle = std::fmod(joint_angle, 2 * M_PI);
-
+            
             if (offset_ > 0.0)
             {
                 joint_angle = 2 * M_PI - joint_angle;
@@ -448,7 +433,7 @@ private:
             if (std::abs(joint_angle) > M_PI)
             {
                 curve_angle = explement_reflex_angle(angle_b - angle_a);
-                // Bulge steps should be determined by the inverse of the joint angle.
+                // Bulge steps should be determined by the inverse of the joint angle. 
                 double half_turns = half_turn_segments_ * std::fabs(curve_angle);
                 bulge_steps = 1 + static_cast<int>(std::floor(half_turns / M_PI));
             }
@@ -528,7 +513,7 @@ private:
             v_y1y0 = -v_y1y2;
             // Calculate new angle_a
             angle_a = std::atan2(v_y1y2, v_x1x2);
-
+            
             // Calculate the new vector
             v_x1x2 = v2.x - v1.x;
             v_y1y2 = v2.y - v1.y;
@@ -537,11 +522,11 @@ private:
 
             dot = v_x1x0 * v_x1x2 + v_y1y0 * v_y1y2;      // dot product
             det = v_x1x0 * v_y1y2 - v_y1y0 * v_x1x2;      // determinant
-
+            
             joint_angle = std::atan2(det, dot);  // atan2(y, x) or atan2(sin, cos)
             if (joint_angle < 0) joint_angle = joint_angle + 2 * M_PI;
             joint_angle = std::fmod(joint_angle, 2 * M_PI);
-
+            
             if (offset_ > 0.0)
             {
                 joint_angle = 2 * M_PI - joint_angle;
@@ -552,7 +537,7 @@ private:
             if (std::abs(joint_angle) > M_PI)
             {
                 curve_angle = explement_reflex_angle(angle_b - angle_a);
-                // Bulge steps should be determined by the inverse of the joint angle.
+                // Bulge steps should be determined by the inverse of the joint angle. 
                 double half_turns = half_turn_segments_ * std::fabs(curve_angle);
                 bulge_steps = 1 + static_cast<int>(std::floor(half_turns / M_PI));
             }

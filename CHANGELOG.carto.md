@@ -1,5 +1,11 @@
 # CARTO Mapnik Changelog
 
+## 3.0.15.9
+**Release date**: 2018-XX-XX
+
+Changes:
+ - Fix bug that failed to place lines in the MarkerSymbolizer if its length is 0.
+
 ## 3.0.15.8
 
 **Release date**: 2018-05-07

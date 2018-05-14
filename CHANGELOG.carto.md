@@ -1,10 +1,10 @@
 # CARTO Mapnik Changelog
 
 ## 3.0.15.9
-**Release date**: 2018-XX-XX
+**Release date**: 2018-05-14
 
 Changes:
- - Fix bug that failed to place lines in the MarkerSymbolizer if its length is 0.
+ - Fix bug that failed to place lines in the MarkerSymbolizer if its length is 0. Sent upstream.
 
 ## 3.0.15.8
 
@@ -14,7 +14,7 @@ Changes:
  - Qualify ICU types explicitly (ICU 61 Compatibility). Sent upstream.
  - Move markers cache from a global scope to a per map scope. Multiple improvements to increase lookup speed and avoid the need for mutexes.
  - Apply overlap optimization to `load_map_string` too. Generalized it to be used also for points and text. Sent upstream.
- - Use pkg-config to find FreeType2 if available (Freetype 2.9.1+ compatibility)
+ - Use pkg-config to find FreeType2 if available (Freetype 2.9.1+ compatibility). Sent upstream.
 
 ## 3.0.15.7
 
@@ -23,7 +23,7 @@ Changes:
 Changes:
  - Metrics: Add metrics in the grid renderer
  - Metrics: Compatibily fix for older compilers (80ecf2741 by @dprophet)
- - Fix build issue with MAPNIK_THREADSAFE disabled
+ - Fix build issue with MAPNIK_THREADSAFE disabled. Sent upstream.
  - Metrics: Internal rework (no mutex, no tree) to improve performance
  - Metrics: Add metrics for feature types
  - Metrics: Add metrics to the agg renderer

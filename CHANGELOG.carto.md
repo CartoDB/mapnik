@@ -1,5 +1,12 @@
 # CARTO Mapnik Changelog
 
+## 3.0.15.10
+**Release date**: 2018-XX-XX
+
+Changes:
+ - Improve clip calculation to avoid issues when using offset.
+
+
 ## 3.0.15.9
 **Release date**: 2018-05-14
 

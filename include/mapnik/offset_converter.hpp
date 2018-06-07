@@ -40,6 +40,8 @@
 namespace mapnik
 {
 
+static constexpr double offset_converter_default_threshold = 5.0;
+
 template <typename Geometry>
 struct offset_converter
 {
@@ -48,7 +50,7 @@ struct offset_converter
     offset_converter(Geometry & geom)
         : geom_(geom)
         , offset_(0.0)
-        , threshold_(5.0)
+        , threshold_(offset_converter_default_threshold)
         , half_turn_segments_(16)
         , status_(initial)
         , pre_first_(vertex2d::no_init)
@@ -129,6 +131,14 @@ struct offset_converter
             //break; // uncomment this to see all the curls
 
             vertex2d const& u0 = vertices_[i];
+
+            // End or beginning of a line or ring must not be filtered out
+            // to not to join lines or rings together.
+            if (u0.cmd == SEG_CLOSE || u0.cmd == SEG_MOVETO)
+            {
+                break;
+            }
+
             vertex2d const& u1 = vertices_[i+1];
             double const dx = u0.x - cur_.x;
             double const dy = u0.y - cur_.y;
